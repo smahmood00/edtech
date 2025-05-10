@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ChevronDown, Menu, X } from "lucide-react"
+import { ChevronDown, Menu, X, LogOut as LogOutIcon } from "lucide-react" // Renamed LogOut to LogOutIcon to avoid conflict
+import { useRouter, usePathname } from "next/navigation" // Ensure usePathname is imported
+import { useSession, signOut } from "next-auth/react"
 
 import { Button } from "@/components/ui/button"
-import { useMobile } from "@/hooks/use-mobile"
+import { useMobile } from "@/hooks/use-mobile" // Ensure this path resolves correctly
 
 export function Header() {
   const isMobile = useMobile()
@@ -13,30 +15,80 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [isVisible, setIsVisible] = useState(true)
+  const router = useRouter()
+  const pathname = usePathname(); // Make sure this line is active
+
+  const { data: session, status: nextAuthStatus } = useSession();
+  const [hasLocalAuthToken, setHasLocalAuthToken] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY
-
-      // Determine if scrolling up or down
       if (currentScrollY > lastScrollY) {
-        // Scrolling down
         setIsVisible(false)
       } else {
-        // Scrolling up
         setIsVisible(true)
       }
-
-      // Update scroll position
       setLastScrollY(currentScrollY)
-
-      // Set scrolled state for styling
       setIsScrolled(currentScrollY > 10)
     }
 
     window.addEventListener("scroll", handleScroll, { passive: true })
     return () => window.removeEventListener("scroll", handleScroll)
   }, [lastScrollY])
+
+  useEffect(() => {
+    // This effect runs on the client-side to check localStorage for "authToken"
+    const checkLocalAuthToken = () => {
+      const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+      setHasLocalAuthToken(!!token);
+    };
+
+    checkLocalAuthToken(); // Initial check
+
+    // Listen for storage events to react to changes in localStorage (e.g., login/logout in another tab)
+    // This is good for cross-tab sync.
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "authToken") {
+        checkLocalAuthToken();
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("storage", handleStorageChange);
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("storage", handleStorageChange);
+      }
+    };
+  }, [pathname]); // Add pathname as a dependency
+
+  const isNextAuthLoggedIn = nextAuthStatus === "authenticated";
+  // User is considered logged in if either NextAuth session exists OR a local auth token is present
+  const isLoggedIn = isNextAuthLoggedIn || hasLocalAuthToken;
+
+  const handleLogout = async () => {
+    // If logged in via NextAuth, sign out
+    if (isNextAuthLoggedIn) {
+      await signOut({ redirect: false }); // Perform NextAuth sign out without immediate redirection
+    }
+
+    // If logged in via local token, remove it
+    if (hasLocalAuthToken) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("authToken");
+      }
+      setHasLocalAuthToken(false); // Update state to reflect logout
+    }
+
+    if (isMobile && isMenuOpen) {
+      setIsMenuOpen(false);
+    }
+    
+    router.push('/'); // Redirect to homepage after all logout operations
+  };
 
   return (
     <header
@@ -77,54 +129,26 @@ export function Header() {
                       <ChevronDown className="h-4 w-4 ml-1" />
                     </button>
                     <div id="mobile-courses-submenu" className="hidden pl-4 mt-1 space-y-1">
-                      <Link
-                        href="/courses/coding-basics"
-                        className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]"
-                      >
-                        Coding Basics
-                      </Link>
-                      <Link
-                        href="/courses/ai-for-kids"
-                        className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]"
-                      >
-                        AI for Kids
-                      </Link>
-                      <Link
-                        href="/courses/game-development"
-                        className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]"
-                      >
-                        Game Development
-                      </Link>
-                      <Link
-                        href="/courses/robotics"
-                        className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]"
-                      >
-                        Robotics
-                      </Link>
-                      <Link
-                        href="/courses/web-design"
-                        className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]"
-                      >
-                        Web Design
-                      </Link>
+                      <Link href="/courses/coding-basics" className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]" onClick={() => setIsMenuOpen(false)}>Coding Basics</Link>
+                      <Link href="/courses/ai-for-kids" className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]" onClick={() => setIsMenuOpen(false)}>AI for Kids</Link>
+                      <Link href="/courses/game-development" className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]" onClick={() => setIsMenuOpen(false)}>Game Development</Link>
+                      <Link href="/courses/robotics" className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]" onClick={() => setIsMenuOpen(false)}>Robotics</Link>
+                      <Link href="/courses/web-design" className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]" onClick={() => setIsMenuOpen(false)}>Web Design</Link>
                     </div>
                   </div>
-                  <Link
-                    href="/about"
-                    className="px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#4A6FA5] transition-colors duration-200"
-                  >
-                    About Us
-                  </Link>
-                  <Link
-                    href="/blog"
-                    className="px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#4A6FA5] transition-colors duration-200"
-                  >
-                    Blog
-                  </Link>
+                  <Link href="/about" className="px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#4A6FA5] transition-colors duration-200" onClick={() => setIsMenuOpen(false)}>About Us</Link>
+                  <Link href="/blog" className="px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#4A6FA5] transition-colors duration-200" onClick={() => setIsMenuOpen(false)}>Blog</Link>
+                  
                   <div className="pt-2 border-t border-[#4A6FA5]/20">
-                    <Button asChild className="w-full bg-[#4A6FA5] hover:bg-[#FF8A5B] text-white">
-                      <Link href="/login">Login</Link>
-                    </Button>
+                    {isLoggedIn ? (
+                      <Button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-700 text-white">
+                        <LogOutIcon className="mr-2 h-4 w-4" /> Logout
+                      </Button>
+                    ) : (
+                      <Button asChild className="w-full bg-[#4A6FA5] hover:bg-[#FF8A5B] text-white">
+                        <Link href="/parent-login" onClick={() => setIsMenuOpen(false)}>Login</Link>
+                      </Button>
+                    )}
                   </div>
                 </nav>
               </div>
@@ -140,59 +164,27 @@ export function Header() {
                 </button>
                 <div className="absolute left-0 top-full mt-2 w-48 rounded-md bg-white border border-[#4A6FA5]/20 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                   <div className="py-2">
-                    <Link
-                      href="/courses/coding-basics"
-                      className="block px-4 py-2 text-[#172A3A] hover:bg-[#F5F7FA] hover:text-[#4A6FA5]"
-                    >
-                      Coding Basics
-                    </Link>
-                    <Link
-                      href="/courses/ai-for-kids"
-                      className="block px-4 py-2 text-[#172A3A] hover:bg-[#F5F7FA] hover:text-[#4A6FA5]"
-                    >
-                      AI for Kids
-                    </Link>
-                    <Link
-                      href="/courses/game-development"
-                      className="block px-4 py-2 text-[#172A3A] hover:bg-[#F5F7FA] hover:text-[#4A6FA5]"
-                    >
-                      Game Development
-                    </Link>
-                    <Link
-                      href="/courses/robotics"
-                      className="block px-4 py-2 text-[#172A3A] hover:bg-[#F5F7FA] hover:text-[#4A6FA5]"
-                    >
-                      Robotics
-                    </Link>
-                    <Link
-                      href="/courses/web-design"
-                      className="block px-4 py-2 text-[#172A3A] hover:bg-[#F5F7FA] hover:text-[#4A6FA5]"
-                    >
-                      Web Design
-                    </Link>
+                    <Link href="/courses/coding-basics" className="block px-4 py-2 text-[#172A3A] hover:bg-[#F5F7FA] hover:text-[#4A6FA5]">Coding Basics</Link>
+                    <Link href="/courses/ai-for-kids" className="block px-4 py-2 text-[#172A3A] hover:bg-[#F5F7FA] hover:text-[#4A6FA5]">AI for Kids</Link>
+                    <Link href="/courses/game-development" className="block px-4 py-2 text-[#172A3A] hover:bg-[#F5F7FA] hover:text-[#4A6FA5]">Game Development</Link>
+                    <Link href="/courses/robotics" className="block px-4 py-2 text-[#172A3A] hover:bg-[#F5F7FA] hover:text-[#4A6FA5]">Robotics</Link>
+                    <Link href="/courses/web-design" className="block px-4 py-2 text-[#172A3A] hover:bg-[#F5F7FA] hover:text-[#4A6FA5]">Web Design</Link>
                   </div>
                 </div>
               </div>
-              <Link
-                href="/about"
-                className="font-medium text-[#4A6FA5] transition-colors hover:text-[#FF8A5B] relative after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-[#FF8A5B] after:transition-all hover:after:w-full"
-              >
-                About Us
-              </Link>
-              <Link
-                href="/blog"
-                className="font-medium text-[#4A6FA5] transition-colors hover:text-[#FF8A5B] relative after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-[#FF8A5B] after:transition-all hover:after:w-full"
-              >
-                Blog
-              </Link>
+              <Link href="/about" className="font-medium text-[#4A6FA5] transition-colors hover:text-[#FF8A5B] relative after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-[#FF8A5B] after:transition-all hover:after:w-full">About Us</Link>
+              <Link href="/blog" className="font-medium text-[#4A6FA5] transition-colors hover:text-[#FF8A5B] relative after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-[#FF8A5B] after:transition-all hover:after:w-full">Blog</Link>
             </nav>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" asChild className="text-[#4A6FA5] hover:text-[#FF8A5B] hover:bg-[#F5F7FA]">
-                <Link href="/login">Login</Link>
-              </Button>
-              <Button asChild className="bg-[#4A6FA5] hover:bg-[#FF8A5B] text-white">
-                <Link href="/signup">Sign Up</Link>
-              </Button>
+              {isLoggedIn ? (
+                <Button onClick={handleLogout} variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-100">
+                  <LogOutIcon className="mr-2 h-4 w-4" /> Logout
+                </Button>
+              ) : (
+                <Button variant="ghost" asChild className="text-[#4A6FA5] hover:text-[#FF8A5B] hover:bg-[#F5F7FA]">
+                  <Link href="/parent-login">Login</Link>
+                </Button>
+              )}
             </div>
           </>
         )}

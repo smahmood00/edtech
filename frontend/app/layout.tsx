@@ -3,31 +3,22 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { ThemeProvider } from "@/components/theme-provider"
-
-const inter = Inter({ subsets: ["latin"] })
-
-export const metadata: Metadata = {
-  title: "TechKids - AI and Coding for Kids and Teens",
-  description: "Interactive AI and coding courses designed specifically for kids and teens.",
-    generator: 'v0.dev'
-}
+import { NextAuthProvider } from "@/components/AuthProvider"; // Adjust path if needed
+import { Header } from "@/components/header"; // Assuming your header is here
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <Header />
+      <body>
+        <NextAuthProvider>
+          <Header /> {/* Your header component */}
           <main>{children}</main>
-          <Footer />
-        </ThemeProvider>
+          {/* Footer or other global components */}
+        </NextAuthProvider>
       </body>
     </html>
   )
