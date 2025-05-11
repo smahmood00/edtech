@@ -1,9 +1,8 @@
+
 import { Suspense } from 'react';
 import Image from 'next/image';
-// Removed Badge, Accordion, AccordionContent, AccordionItem, AccordionTrigger, Separator as they are not used in the new design
-// Added PlayCircle, Target, Award, Star, Zap from lucide-react
-// Added DollarSign for price
 import { CheckCircle, BookOpen, Users, Clock, PlayCircle, Target, Award, Star, Zap, DollarSign } from 'lucide-react';
+import { EnrollButton } from './EnrollButton';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
@@ -23,7 +22,7 @@ interface CourseLesson {
   // The 8-12 page has 'hours' and 'outcome' for lessons. These are not in your current CourseLesson.
   // We will adapt the display.
   hours?: number; // Added for potential future use or if data model changes
-  outcome?: string; // Added for potential future use or if data model changes
+  outcomes?: string[]; // Added for potential future use or if data model changes
 }
 
 interface CourseType {
@@ -64,7 +63,8 @@ async function getCourse(slug: string): Promise<CourseType | null> {
 }
 
 export default async function CourseDetailPage({ params }: { params: { slug: string } }) {
-  const course = await getCourse(params.slug);
+  const { slug } = await params; // Remove await as it's not needed
+  const course = await getCourse(slug);
 
   if (!course) {
     return (
@@ -100,9 +100,10 @@ export default async function CourseDetailPage({ params }: { params: { slug: str
               {course.title}
             </p>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-              <button className="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-semibold py-3 px-8 rounded-lg text-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 w-full sm:w-auto">
-                <Star className="inline h-5 w-5 mr-2" /> Enroll Now
-              </button>
+              <EnrollButton 
+                courseName={course.courseName}
+                price={course.price}
+              />
               <button className="bg-transparent border-2 border-sky-400 text-sky-400 hover:bg-sky-400 hover:text-slate-900 font-semibold py-3 px-8 rounded-lg text-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 w-full sm:w-auto">
                 Chat with Us
               </button>
@@ -174,17 +175,22 @@ export default async function CourseDetailPage({ params }: { params: { slug: str
                       <h3 className="text-2xl font-semibold text-sky-300 mb-2 sm:mb-0">
                         Lesson {index + 1}: {lesson.title}
                       </h3>
-                      {lesson.hours && ( // Conditionally render hours if available
+                      {lesson.hours && (
                         <span className="text-sm text-gray-400 bg-slate-700 px-3 py-1 rounded-full">
                           <Clock className="inline h-4 w-4 mr-1" /> {lesson.hours} hours
                         </span>
                       )}
                     </div>
                     <p className="text-gray-300 mb-3 leading-relaxed whitespace-pre-line">{lesson.description}</p>
-                    {lesson.outcome && ( // Conditionally render outcome if available
-                       <div className="flex items-start text-green-400">
-                        <CheckCircle className="h-5 w-5 mr-2 mt-1 flex-shrink-0" />
-                        <p><span className="font-semibold">Outcome:</span> {lesson.outcome}</p>
+                    {lesson.outcomes && lesson.outcomes.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="font-semibold text-green-400">Outcomes:</p>
+                        {lesson.outcomes.map((outcome, idx) => (
+                          <div key={idx} className="flex items-start text-green-400">
+                            <CheckCircle className="h-5 w-5 mr-2 mt-1 flex-shrink-0" />
+                            <p>{outcome}</p>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </article>
@@ -232,9 +238,11 @@ export default async function CourseDetailPage({ params }: { params: { slug: str
 
           {/* Call to Action (Optional) */}
           <section className="text-center py-10">
-            <button className="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-bold py-4 px-10 rounded-lg text-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-              <Star className="inline h-6 w-6 mr-2" /> Enroll Now!
-            </button>
+            <EnrollButton 
+              courseName={course.courseName}
+              price={course.price}
+              className="font-bold py-4 px-10 text-xl shadow-lg hover:shadow-2xl"
+            />
           </section>
         </main>
       </div>
