@@ -172,10 +172,10 @@ export function Header() {
                   </div>
                 </div>
               </div>
+              <Link href="/summer-courses" className="font-medium text-[#FF0000] transition-colors hover:text-[#FF8A5B] relative after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-[#FF8A5B] after:transition-all hover:after:w-full">Summer Courses!</Link>
               <Link href="/about" className="font-medium text-[#4A6FA5] transition-colors hover:text-[#FF8A5B] relative after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-[#FF8A5B] after:transition-all hover:after:w-full">About Us</Link>
               <Link href="/blog" className="font-medium text-[#4A6FA5] transition-colors hover:text-[#FF8A5B] relative after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-[#FF8A5B] after:transition-all hover:after:w-full">Blog</Link>
-              <Link href="/summer-courses" className="font-medium text-[#4A6FA5] transition-colors hover:text-[#FF8A5B] relative after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-[#FF8A5B] after:transition-all hover:after:w-full">Summer Courses!</Link>
-             
+              
             </nav>
             <div className="flex items-center gap-2">
               {isLoggedIn ? (

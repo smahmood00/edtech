@@ -9,6 +9,8 @@ const lessonSchema = new mongoose.Schema({
 });
 
 const courseSchema = new mongoose.Schema({
+  courseId: { type: String, required: true, unique: true }, // Added courseId
+  price: { type: Number, required: true }, // Added price
   ageGroup: { type: String, required: true },
   courseName: { type: String, required: true },
   toolUsed: { type: String, required: true },
@@ -21,7 +23,7 @@ const courseSchema = new mongoose.Schema({
   lessons: [lessonSchema],
   keyLearningOutcomes: [{ type: String }],
   endProductShowcaseMedia: [{ type: String }],
-  isPublished: { type: Boolean, default: false },
+  isPublished: { type: Boolean, default: true },
   slug: { type: String, unique: true }
 });
 
