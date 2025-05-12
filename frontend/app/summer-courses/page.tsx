@@ -7,7 +7,7 @@ import { Suspense } from 'react';
 import CourseCard from '@/components/CourseCard'; // Import the new client component
 
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = 'https://edtech-1-ll96.onrender.com/';
 console.log("API base url is", API_BASE_URL);
 async function getCourses() {
   const res = await fetch(`${API_BASE_URL}/api/courses`, {
