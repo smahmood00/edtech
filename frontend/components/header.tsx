@@ -112,7 +112,7 @@ export function Header() {
             </Button>
 
             {isMenuOpen && (
-              <div className="absolute inset-x-0 top-16 z-50 bg-white border-b border-[#4A6FA5]/20">
+              <div className="fixed inset-x-0 top-16 z-50 bg-white border-b border-[#4A6FA5]/20 max-h-[calc(100vh-4rem)] overflow-y-auto">
                 <nav className="container flex flex-col py-4 space-y-2">
                   <div className="relative">
                     <button
