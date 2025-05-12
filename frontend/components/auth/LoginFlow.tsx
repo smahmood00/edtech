@@ -10,6 +10,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth`;
+console.log("API base url is", API_BASE_URL);
 const OTP_RESEND_TIMEOUT = 35;
 
 interface LoginFlowProps {
