@@ -136,6 +136,7 @@ export function Header() {
                       <Link href="/courses/web-design" className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]" onClick={() => setIsMenuOpen(false)}>Web Design</Link>
                     </div>
                   </div>
+                  <Link href="/summer-courses" className="font-medium text-[#FF0000] transition-colors hover:text-[#FF8A5B] relative after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-[#FF8A5B] after:transition-all hover:after:w-full">Summer Courses!</Link>
                   <Link href="/about" className="px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#4A6FA5] transition-colors duration-200" onClick={() => setIsMenuOpen(false)}>About Us</Link>
                   <Link href="/blog" className="px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#4A6FA5] transition-colors duration-200" onClick={() => setIsMenuOpen(false)}>Blog</Link>
                   
