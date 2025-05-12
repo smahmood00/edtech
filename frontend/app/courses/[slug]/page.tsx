@@ -15,12 +15,8 @@ interface CourseLesson {
   _id: string;
   title: string;
   description: string;
-  // videoUrl and resources are not directly used in the new lesson display style from 8-12/page.tsx
-  // but we keep them in the interface if they are part of the data model
   videoUrl?: string;
   resources?: CourseLessonResource[];
-  // The 8-12 page has 'hours' and 'outcome' for lessons. These are not in your current CourseLesson.
-  // We will adapt the display.
   hours?: number; // Added for potential future use or if data model changes
   outcomes?: string[]; // Added for potential future use or if data model changes
 }

@@ -1,5 +1,6 @@
-"use client";
+'use client';
 
+import { Suspense } from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +14,14 @@ interface CheckoutSummaryProps {
 }
 
 export default function CheckoutSummaryPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-4 py-8">Loading...</div>}>
+      <CheckoutSummaryContent />
+    </Suspense>
+  );
+}
+
+function CheckoutSummaryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
