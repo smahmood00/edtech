@@ -111,49 +111,51 @@ export function Header() {
               {isMenuOpen ? <X className="h-6 w-6 text-[#4A6FA5]" /> : <Menu className="h-6 w-6 text-[#4A6FA5]" />}
             </Button>
 
-            {isMenuOpen && (
-              <div className="fixed inset-x-0 top-16 z-50 bg-white border-b border-[#4A6FA5]/20 max-h-[calc(100vh-4rem)] overflow-y-auto">
-                <nav className="container flex flex-col py-4 space-y-2">
-                  <div className="relative">
-                    <button
-                      className="flex items-center justify-between w-full px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#4A6FA5] transition-colors duration-200"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        const submenu = document.getElementById("mobile-courses-submenu")
-                        if (submenu) {
-                          submenu.classList.toggle("hidden")
-                        }
-                      }}
-                    >
-                      Courses
-                      <ChevronDown className="h-4 w-4 ml-1" />
-                    </button>
-                    <div id="mobile-courses-submenu" className="hidden pl-4 mt-1 space-y-1">
-                      <Link href="/courses/coding-basics" className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]" onClick={() => setIsMenuOpen(false)}>Coding Basics</Link>
-                      <Link href="/courses/ai-for-kids" className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]" onClick={() => setIsMenuOpen(false)}>AI for Kids</Link>
-                      <Link href="/courses/game-development" className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]" onClick={() => setIsMenuOpen(false)}>Game Development</Link>
-                      <Link href="/courses/robotics" className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]" onClick={() => setIsMenuOpen(false)}>Robotics</Link>
-                      <Link href="/courses/web-design" className="block px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#172A3A]" onClick={() => setIsMenuOpen(false)}>Web Design</Link>
-                    </div>
+            <div 
+              className={`fixed inset-0 top-16 z-50 bg-white/100 border-b border-[#4A6FA5]/20 transform transition-transform duration-300 ease-in-out min-h-screen ${
+                isMenuOpen ? 'translate-x-0' : 'translate-x-full'
+              }`}
+            >
+              <nav className="container flex flex-col py-8 space-y-4 h-[calc(100vh-4rem)] overflow-y-auto">
+                <div className="relative">
+                  <button
+                    className="flex items-center justify-between w-full px-4 py-3 hover:bg-[#F5F7FA] rounded-md text-[#4A6FA5] transition-colors duration-200 text-lg"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      const submenu = document.getElementById("mobile-courses-submenu")
+                      if (submenu) {
+                        submenu.classList.toggle("hidden")
+                      }
+                    }}
+                  >
+                    Courses
+                    <ChevronDown className="h-5 w-5 ml-1" />
+                  </button>
+                  <div id="mobile-courses-submenu" className="hidden pl-4 mt-2 space-y-2">
+                    <Link href="/courses/coding-basics" className="block px-4 py-3 hover:bg-[#F5F7FA] rounded-md text-[#172A3A] text-lg" onClick={() => setIsMenuOpen(false)}>Coding Basics</Link>
+                    <Link href="/courses/ai-for-kids" className="block px-4 py-3 hover:bg-[#F5F7FA] rounded-md text-[#172A3A] text-lg" onClick={() => setIsMenuOpen(false)}>AI for Kids</Link>
+                    <Link href="/courses/game-development" className="block px-4 py-3 hover:bg-[#F5F7FA] rounded-md text-[#172A3A] text-lg" onClick={() => setIsMenuOpen(false)}>Game Development</Link>
+                    <Link href="/courses/robotics" className="block px-4 py-3 hover:bg-[#F5F7FA] rounded-md text-[#172A3A] text-lg" onClick={() => setIsMenuOpen(false)}>Robotics</Link>
+                    <Link href="/courses/web-design" className="block px-4 py-3 hover:bg-[#F5F7FA] rounded-md text-[#172A3A] text-lg" onClick={() => setIsMenuOpen(false)}>Web Design</Link>
                   </div>
-                  <Link href="/summer-courses" className="font-medium text-[#FF0000] transition-colors hover:text-[#FF8A5B] relative after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-[#FF8A5B] after:transition-all hover:after:w-full">Summer Courses!</Link>
-                  <Link href="/about" className="px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#4A6FA5] transition-colors duration-200" onClick={() => setIsMenuOpen(false)}>About Us</Link>
-                  <Link href="/blog" className="px-4 py-2 hover:bg-[#F5F7FA] rounded-md text-[#4A6FA5] transition-colors duration-200" onClick={() => setIsMenuOpen(false)}>Blog</Link>
-                  
-                  <div className="pt-2 border-t border-[#4A6FA5]/20">
-                    {isLoggedIn ? (
-                      <Button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-700 text-white">
-                        <LogOutIcon className="mr-2 h-4 w-4" /> Logout
-                      </Button>
-                    ) : (
-                      <Button asChild className="w-full bg-[#4A6FA5] hover:bg-[#FF8A5B] text-white">
-                        <Link href="/parent-login" onClick={() => setIsMenuOpen(false)}>Login</Link>
-                      </Button>
-                    )}
-                  </div>
-                </nav>
-              </div>
-            )}
+                </div>
+                <Link href="/summer-courses" className="block px-4 py-3 font-medium text-[#FF0000] hover:text-[#FF8A5B] text-lg transition-colors duration-200" onClick={() => setIsMenuOpen(false)}>Summer Courses!</Link>
+                <Link href="/about" className="block px-4 py-3 text-[#4A6FA5] hover:bg-[#F5F7FA] rounded-md text-lg transition-colors duration-200" onClick={() => setIsMenuOpen(false)}>About Us</Link>
+                <Link href="/blog" className="block px-4 py-3 text-[#4A6FA5] hover:bg-[#F5F7FA] rounded-md text-lg transition-colors duration-200" onClick={() => setIsMenuOpen(false)}>Blog</Link>
+                
+                <div className="mt-auto pt-4 border-t border-[#4A6FA5]/20">
+                  {isLoggedIn ? (
+                    <Button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-700 text-white py-4 text-lg">
+                      <LogOutIcon className="mr-2 h-5 w-5" /> Logout
+                    </Button>
+                  ) : (
+                    <Button asChild className="w-full bg-[#4A6FA5] hover:bg-[#FF8A5B] text-white py-4 text-lg">
+                      <Link href="/parent-login" onClick={() => setIsMenuOpen(false)}>Login</Link>
+                    </Button>
+                  )}
+                </div>
+              </nav>
+            </div>
           </>
         ) : (
           <>
