@@ -4,8 +4,9 @@ import Image from 'next/image';
 import { CheckCircle, BookOpen, Users, Clock, PlayCircle, Target, Award, Star, Zap, DollarSign } from 'lucide-react';
 import { EnrollButton } from './EnrollButton';
 
-const API_BASE_URL = 'https://edtech-1-ll96.onrender.com' || 'http://localhost:5000';
-console.log("API base url is", API_BASE_URL);
+const API_BASE_URL =  process.env.NEXT_PUBLIC_API_BASE_URL; 
+console.log('In courses, API_BASE_URL is: ',API_BASE_URL)
+
 interface CourseLessonResource {
   name: string;
   url: string;

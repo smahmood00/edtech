@@ -9,8 +9,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
-const API_BASE_URL = 'https://edtech-1-ll96.onrender.com/api/auth';
-console.log("API base url is", API_BASE_URL);
+//const API_BASE_URL = 'https://edtech-1-ll96.onrender.com/api/auth';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth`; // Add this line to get the API base URL from the environment variabl
+console.log("In LoginFlow, API BASE URL is", API_BASE_URL);
 const OTP_RESEND_TIMEOUT = 35;
 
 interface LoginFlowProps {
