@@ -1,115 +1,192 @@
+"use client"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowRight, Code, Brain, Zap, Users, BarChart, Shield, CheckCircle, Star } from "lucide-react"
-
+import { ArrowRight, Code, Brain, Zap, Users, BarChart, Shield, CheckCircle, Star, Bot, Gamepad2, ChevronLeft, ChevronRight, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useEffect, useState, useRef } from "react"
+import { motion } from "framer-motion"
+import CourseCard from "@/components/CourseCard"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
+import styles from './styles.module.css'
+import Testimonials from "@/components/Testimonials"
+import Footer from "@/components/footer"
+
+// Course type definition from CourseCard component
+interface Course {
+  _id: string;
+  slug: string;
+  courseId: string;
+  price: number;
+  courseName: string;
+  coverImage?: string;
+  ageGroup: string;
+  title: string;
+  totalClasses: number;
+  totalHours: number;
+  toolUsed: string;
+  keyLearningOutcomes: string[];
+}
+
+// Animation variants
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.1,
+      duration: 0.5,
+      ease: "easeOut"
+    }
+  })
+}
 
 export default function Home() {
-  return (
-    <div className="flex min-h-screen flex-col bg-white">
-      {/* Hero Section with white background as requested */}
-      <section className="relative overflow-hidden bg-white py-20 md:py-32 pt-32">
-        {/* Decorative elements with animation */}
-        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#4A6FA5]/10 blur-3xl animate-pulse"></div>
-        <div
-          className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-[#FF8A5B]/10 blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute top-1/4 right-1/3 h-32 w-32 rounded-full bg-[#4A6FA5]/10 blur-xl animate-bounce"
-          style={{ animationDuration: "6s" }}
-        ></div>
-        <div
-          className="absolute bottom-1/3 left-1/4 h-24 w-24 rounded-full bg-[#FF8A5B]/10 blur-xl animate-bounce"
-          style={{ animationDuration: "8s", animationDelay: "1s" }}
-        ></div>
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-        <div className="container relative px-4 md:px-6">
-          <div className="grid gap-12 md:grid-cols-2 md:gap-16">
-            <div className="flex flex-col justify-center space-y-8 animate-fadeIn" style={{ animationDuration: "1s" }}>
-              <Badge className="w-fit bg-[#4A6FA5] text-white hover:bg-[#FF8A5B] px-4 py-1 text-sm">
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+        const response = await fetch(`${API_BASE_URL}/api/courses`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch courses');
+        }
+        const data = await response.json();
+        setCourses(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch courses');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  return (
+    <div className="flex min-h-screen flex-col bg-white-100">
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-end sm:items-center pb-20 sm:pb-0 overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 w-full h-full">
+          <Image
+            src="/hero-section-kid.jpg"
+            alt="Kids learning technology"
+            fill
+            className="object-cover brightness-[0.85]"
+            priority
+          />
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#172A3A]/90 to-transparent"></div>
+        </div>
+
+        {/* Content */}
+        <div className="container relative z-10 px-4 md:px-6 mx-auto">
+          <div className="max-w-3xl">
+            <div className="animate-fadeIn space-y-6 md:space-y-8">
+              <Badge 
+                className="w-fit bg-white/10 backdrop-blur-sm text-white border-none hover:bg-white/20 px-4 py-1 text-sm
+                animate-slideInFromLeft"
+                style={{ animationDelay: "0.2s" }}
+              >
                 Learning for the future
               </Badge>
+              
               <div className="space-y-4">
-                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
-                  <span
-                    className="bg-gradient-to-r from-[#4A6FA5] to-[#FF8A5B] bg-clip-text text-transparent animate-gradient"
-                    style={{ animationDuration: "3s" }}
-                  >
-                    TechKids
+                <h1 className="animate-slideInFromBottom" style={{ animationDelay: "0.4s" }}>
+                  <span className="block text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight">
+                    Where Young Minds
                   </span>
-                  <span className="block mt-2 text-[#172A3A]">Where Young Minds Meet Technology</span>
+                  <span className="block text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-[#4A6FA5] to-[#FF8A5B] bg-clip-text text-transparent mt-2">
+                    Meet Technology
+                  </span>
                 </h1>
-                <p className="max-w-[600px] text-[#4A6FA5] md:text-xl">
+                
+                <p className="max-w-[600px] text-white/80 text-lg md:text-xl animate-slideInFromBottom" 
+                  style={{ animationDelay: "0.6s" }}>
                   Empower your child with the skills of tomorrow. Interactive AI and coding courses designed
                   specifically for kids and teens.
                 </p>
               </div>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Button
-                  size="lg"
-                  className="bg-[#4A6FA5] hover:bg-[#FF8A5B] text-white border-0 transition-transform hover:scale-105 duration-300"
-                >
-                  Start Learning <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex flex-wrap items-center gap-4 text-sm">
-                <div className="flex items-center">
-                  <Shield className="mr-1 h-4 w-4 text-[#4A6FA5]" />
-                  <span className="text-[#172A3A]">Kid-Safe Content</span>
+
+              <div className="mt-12 sm:mt-0 space-y-8 sm:space-y-6">
+                <div className="flex flex-col sm:flex-row gap-4 animate-slideInFromBottom" 
+                  style={{ animationDelay: "0.8s" }}>
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto bg-[#FF8A5B] hover:bg-[#4A6FA5] text-white border-0 
+                      transition-all duration-300 hover:scale-105 hover:shadow-lg shadow-md backdrop-blur-sm"
+                  >
+                    Explore Courses
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full sm:w-auto border-white  hover:bg-white hover:text-[#172A3A] 
+                      transition-all duration-300 hover:scale-105 backdrop-blur-sm"
+                  >
+                    Chat with us
+                  </Button>
                 </div>
-                <div className="flex items-center">
-                  <Users className="mr-1 h-4 w-4 text-[#4A6FA5]" />
-                  <span className="text-[#172A3A]">Expert Instructors</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="mr-1 h-4 w-4 text-[#4A6FA5]" />
-                  <span className="text-[#172A3A]">Interactive Learning</span>
-                </div>
-              </div>
-            </div>
-            <div
-              className="relative flex items-center justify-center animate-float"
-              style={{ animationDuration: "6s" }}
-            >
-              <div className="absolute -z-10 h-[500px] w-[500px] rounded-full bg-gradient-to-r from-[#4A6FA5]/20 to-[#FF8A5B]/20 blur-3xl"></div>
-              <div className="relative h-[450px] w-[450px] drop-shadow-xl">
-                <div
-                  className="absolute -right-6 -top-6 h-24 w-24 rounded-xl bg-[#4A6FA5] p-2 shadow-lg animate-float"
-                  style={{ animationDuration: "4s", animationDelay: "0.5s" }}
-                >
-                  <div className="flex h-full w-full items-center justify-center rounded-lg bg-white">
-                    <Code className="h-10 w-10 text-[#4A6FA5]" />
-                  </div>
-                </div>
-                <div
-                  className="absolute -bottom-6 -left-6 h-24 w-24 rounded-xl bg-[#FF8A5B] p-2 shadow-lg animate-float"
-                  style={{ animationDuration: "5s", animationDelay: "1s" }}
-                >
-                  <div className="flex h-full w-full items-center justify-center rounded-lg bg-white">
-                    <Brain className="h-10 w-10 text-[#FF8A5B]" />
-                  </div>
-                </div>
-                <Image
-                  src="/placeholder.svg?height=450&width=450"
-                  alt="Kids learning technology"
-                  fill
-                  className="object-contain"
-                  priority
-                />
+
+            
               </div>
             </div>
           </div>
         </div>
+
+        {/* Animated Decorative Elements */}
+        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-[#172A3A]/50 to-transparent"></div>
       </section>
 
-      {/* Features Section with light background */}
-      <section className="py-20 bg-[#F5F7FA]">
+      <style jsx global>{`
+        @keyframes slideInFromLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-100px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes slideInFromBottom {
+          from {
+            opacity: 0;
+            transform: translateY(50px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-slideInFromLeft {
+          animation: slideInFromLeft 1s ease-out forwards;
+        }
+
+        .animate-slideInFromBottom {
+          animation: slideInFromBottom 1s ease-out forwards;
+        }
+      `}</style>
+
+      {/* Features Section 
+      <section className="py-20 bg-[#172A3A]">
         <div className="container px-4 md:px-6">
           <div className="mb-12 text-center animate-fadeIn" style={{ animationDuration: "1s", animationDelay: "0.2s" }}>
             <Badge className="mb-4 bg-[#4A6FA5] text-white hover:bg-[#FF8A5B] px-4 py-1">Our Approach</Badge>
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-[#172A3A]">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-white">
               Learning Made Fun and Effective
             </h2>
             <p className="mx-auto mt-4 max-w-[700px] text-[#4A6FA5] md:text-xl">
@@ -149,7 +226,7 @@ export default function Home() {
               <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-[#4A6FA5]/10 transition-all group-hover:bg-[#FF8A5B]/10"></div>
               <div className="relative">
                 <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-[#4A6FA5] text-white transition-all group-hover:bg-[#FF8A5B]">
-                  <Brain className="h-7 w-7" />
+                  <Bot className="h-7 w-7" />
                 </div>
                 <h3 className="mb-3 text-xl font-bold text-[#172A3A]">AI Exploration</h3>
                 <p className="mb-4 text-[#4A6FA5]">
@@ -194,305 +271,183 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
-      {/* Age Groups Section with navy background */}
-      <section className="py-20 bg-[#172A3A]">
-        <div className="container px-4 md:px-6">
-          <div className="mb-12 text-center animate-fadeIn" style={{ animationDuration: "1s", animationDelay: "0.2s" }}>
-            <Badge className="mb-4 bg-[#FF8A5B] text-white hover:bg-[#4A6FA5] px-4 py-1">For Every Age</Badge>
+      {/* Summer Courses Section */}
+      <section className="py-20 bg-[#172A3A] overflow-hidden">
+        <div className="container mx-auto px-4">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: -20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Badge className="mb-4 bg-[#FF8A5B] text-white hover:bg-[#4A6FA5] px-4 py-1">
+              Summer 2025
+            </Badge>
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-white">
-              Courses for Every Age
-            </h2>
-            <p className="mx-auto mt-4 max-w-[700px] text-[#F5F7FA] md:text-xl">
-              Age-appropriate content designed for different learning stages.
-            </p>
-          </div>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            <div
-              className="group relative overflow-hidden rounded-2xl animate-fadeIn hover:scale-[1.02] transition-transform duration-500"
-              style={{ animationDuration: "1s", animationDelay: "0.3s" }}
-            >
-              <div className="absolute inset-0 bg-[#172A3A]/60"></div>
-              <Image
-                src="/placeholder.svg?height=400&width=500"
-                alt="Kids 7-9"
-                width={500}
-                height={400}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute bottom-0 left-0 p-8 text-white">
-                <div className="mb-2 inline-block rounded-full bg-[#FF8A5B]/20 px-3 py-1 text-xs backdrop-blur-sm">
-                  Ages 7-9
-                </div>
-                <h3 className="text-2xl font-bold">Kids</h3>
-                <p className="mb-4 max-w-[90%] text-[#F5F7FA]">
-                  Playful introduction to coding basics through games and interactive stories
-                </p>
-                <Button className="bg-[#FF8A5B] text-white hover:bg-[#4A6FA5] transition-transform hover:scale-105 duration-300">
-                  Explore Courses
-                </Button>
-              </div>
-            </div>
-            <div
-              className="group relative overflow-hidden rounded-2xl animate-fadeIn hover:scale-[1.02] transition-transform duration-500"
-              style={{ animationDuration: "1s", animationDelay: "0.5s" }}
-            >
-              <div className="absolute inset-0 bg-[#172A3A]/60"></div>
-              <Image
-                src="/placeholder.svg?height=400&width=500"
-                alt="Tweens 10-12"
-                width={500}
-                height={400}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute bottom-0 left-0 p-8 text-white">
-                <div className="mb-2 inline-block rounded-full bg-[#FF8A5B]/20 px-3 py-1 text-xs backdrop-blur-sm">
-                  Ages 10-12
-                </div>
-                <h3 className="text-2xl font-bold">Tweens</h3>
-                <p className="mb-4 max-w-[90%] text-[#F5F7FA]">
-                  Project-based learning and game development with real programming languages
-                </p>
-                <Button className="bg-[#FF8A5B] text-white hover:bg-[#4A6FA5] transition-transform hover:scale-105 duration-300">
-                  Explore Courses
-                </Button>
-              </div>
-            </div>
-            <div
-              className="group relative overflow-hidden rounded-2xl animate-fadeIn hover:scale-[1.02] transition-transform duration-500"
-              style={{ animationDuration: "1s", animationDelay: "0.7s" }}
-            >
-              <div className="absolute inset-0 bg-[#172A3A]/60"></div>
-              <Image
-                src="/placeholder.svg?height=400&width=500"
-                alt="Teens 13-17"
-                width={500}
-                height={400}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute bottom-0 left-0 p-8 text-white">
-                <div className="mb-2 inline-block rounded-full bg-[#FF8A5B]/20 px-3 py-1 text-xs backdrop-blur-sm">
-                  Ages 13-17
-                </div>
-                <h3 className="text-2xl font-bold">Teens</h3>
-                <p className="mb-4 max-w-[90%] text-[#F5F7FA]">
-                  Advanced coding, AI, and real-world applications with industry-standard tools
-                </p>
-                <Button className="bg-[#FF8A5B] text-white hover:bg-[#4A6FA5] transition-transform hover:scale-105 duration-300">
-                  Explore Courses
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section with light background */}
-      <section className="py-20 bg-white">
-        <div className="container px-4 md:px-6">
-          <div className="mb-12 text-center animate-fadeIn" style={{ animationDuration: "1s", animationDelay: "0.2s" }}>
-            <Badge className="mb-4 bg-[#4A6FA5] text-white hover:bg-[#FF8A5B] px-4 py-1">Success Stories</Badge>
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-[#172A3A]">
-              What Parents & Kids Say
+              Epic Summer Tech Adventures
             </h2>
             <p className="mx-auto mt-4 max-w-[700px] text-[#4A6FA5] md:text-xl">
-              Hear from families who have experienced the TechKids difference.
+              Join our action-packed summer courses and transform into a tech superhero! 🚀
             </p>
-          </div>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <div
-              className="rounded-2xl bg-white border border-[#4A6FA5]/20 p-8 shadow-sm animate-fadeIn hover:shadow-md transition-all hover:translate-y-[-8px]"
-              style={{ animationDuration: "1s", animationDelay: "0.3s", transitionDuration: "0.5s" }}
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="h-12 w-12 overflow-hidden rounded-full bg-[#4A6FA5]">
-                  <Image src="/placeholder.svg?height=50&width=50" alt="Parent" width={50} height={50} />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-[#172A3A]">Sarah Johnson</h4>
-                  <p className="text-sm text-[#4A6FA5]">Parent of Alex, 12</p>
-                </div>
-              </div>
-              <div className="mb-4 flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-current text-[#FF8A5B]" />
-                ))}
-              </div>
-              <p className="text-[#4A6FA5]">
-                "TechKids has transformed my son's screen time into productive learning. He's building games and talking
-                about AI concepts I barely understand!"
-              </p>
-            </div>
-            <div
-              className="rounded-2xl bg-white border border-[#4A6FA5]/20 p-8 shadow-sm animate-fadeIn hover:shadow-md transition-all hover:translate-y-[-8px]"
-              style={{ animationDuration: "1s", animationDelay: "0.5s", transitionDuration: "0.5s" }}
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="h-12 w-12 overflow-hidden rounded-full bg-[#4A6FA5]">
-                  <Image src="/placeholder.svg?height=50&width=50" alt="Parent" width={50} height={50} />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-[#172A3A]">Michael Rodriguez</h4>
-                  <p className="text-sm text-[#4A6FA5]">Parent of Sophia, 9</p>
-                </div>
-              </div>
-              <div className="mb-4 flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-current text-[#FF8A5B]" />
-                ))}
-              </div>
-              <p className="text-[#4A6FA5]">
-                "My daughter was hesitant about coding, but the game-based approach got her hooked. Now she's creating
-                her own animations and showing them to everyone!"
-              </p>
-            </div>
-            <div
-              className="rounded-2xl bg-white border border-[#4A6FA5]/20 p-8 shadow-sm animate-fadeIn hover:shadow-md transition-all hover:translate-y-[-8px]"
-              style={{ animationDuration: "1s", animationDelay: "0.7s", transitionDuration: "0.5s" }}
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="h-12 w-12 overflow-hidden rounded-full bg-[#4A6FA5]">
-                  <Image src="/placeholder.svg?height=50&width=50" alt="Student" width={50} height={50} />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-[#172A3A]">Ethan Williams</h4>
-                  <p className="text-sm text-[#4A6FA5]">Student, 15</p>
-                </div>
-              </div>
-              <div className="mb-4 flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-current text-[#FF8A5B]" />
-                ))}
-              </div>
-              <p className="text-[#4A6FA5]">
-                "The AI course helped me create a project that won first place at my school's science fair. The
-                instructors are amazing and really know how to explain complex topics."
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+          </motion.div>
 
-      {/* Parent Dashboard Preview with navy background */}
-      <section className="py-20 bg-[#172A3A]">
-        <div className="container px-4 md:px-6">
-          <div className="grid gap-12 md:grid-cols-2 md:gap-16">
-            <div
-              className="flex flex-col justify-center space-y-6 animate-fadeIn"
-              style={{ animationDuration: "1s", animationDelay: "0.2s" }}
-            >
-              <Badge className="w-fit bg-[#FF8A5B] text-white hover:bg-[#4A6FA5] px-4 py-1">For Parents</Badge>
-              <div className="space-y-4">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-white">
-                  Parents Stay Connected
-                </h2>
-                <p className="max-w-[600px] text-[#F5F7FA] md:text-xl">
-                  Monitor your child's progress, manage subscriptions, and get insights into their learning journey with
-                  our comprehensive parent dashboard.
-                </p>
-              </div>
-              <ul className="space-y-4">
-                <li className="flex items-center">
-                  <div className="mr-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8A5B]">
-                    <BarChart className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-[#F5F7FA]">Track progress and achievements in real-time</span>
-                </li>
-                <li className="flex items-center">
-                  <div className="mr-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8A5B]">
-                    <Shield className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-[#F5F7FA]">Control content access and screen time limits</span>
-                </li>
-                <li className="flex items-center">
-                  <div className="mr-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8A5B]">
-                    <Users className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-[#F5F7FA]">Direct communication with expert instructors</span>
-                </li>
-              </ul>
-              <div>
-                <Button
-                  asChild
-                  className="bg-[#FF8A5B] hover:bg-[#4A6FA5] text-white border-0 transition-transform hover:scale-105 duration-300"
-                >
-                  <Link href="/parent-login">Parent Login</Link>
-                </Button>
-              </div>
+          {isLoading ? (
+            <div className="flex justify-center items-center min-h-[300px]">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF8A5B]"></div>
             </div>
-            <div
-              className="flex items-center justify-center animate-fadeIn"
-              style={{ animationDuration: "1s", animationDelay: "0.4s" }}
-            >
-              <div className="relative">
-                <div
-                  className="absolute -left-6 -top-6 h-full w-full rounded-2xl bg-[#FF8A5B]/30 animate-pulse"
-                  style={{ animationDuration: "4s" }}
-                ></div>
-                <div
-                  className="absolute -right-6 -bottom-6 h-full w-full rounded-2xl bg-[#4A6FA5]/30 animate-pulse"
-                  style={{ animationDuration: "4s", animationDelay: "2s" }}
-                ></div>
-                <div className="relative h-[450px] w-full overflow-hidden rounded-2xl border border-[#4A6FA5]/20 shadow-xl">
-                  <Image
-                    src="/placeholder.svg?height=450&width=600"
-                    alt="Parent Dashboard Preview"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              </div>
+          ) : error ? (
+            <div className="text-center text-white bg-red-500/10 rounded-lg p-4">
+              {error}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section with light background */}
-      <section className="relative overflow-hidden py-20 bg-[#F5F7FA]">
-        <div className="absolute inset-0 opacity-10">
-          <div
-            className="absolute -left-20 top-0 h-72 w-72 rounded-full bg-[#4A6FA5] animate-float"
-            style={{ animationDuration: "8s" }}
-          ></div>
-          <div
-            className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-[#FF8A5B] animate-float"
-            style={{ animationDuration: "10s", animationDelay: "1s" }}
-          ></div>
-          <div
-            className="absolute left-1/3 top-1/4 h-36 w-36 rounded-full bg-[#4A6FA5] animate-float"
-            style={{ animationDuration: "7s", animationDelay: "0.5s" }}
-          ></div>
-          <div
-            className="absolute right-1/4 bottom-1/3 h-24 w-24 rounded-full bg-[#FF8A5B] animate-float"
-            style={{ animationDuration: "9s", animationDelay: "1.5s" }}
-          ></div>
-        </div>
-        <div className="container relative px-4 md:px-6">
-          <div
-            className="mx-auto max-w-[800px] text-center animate-fadeIn"
-            style={{ animationDuration: "1s", animationDelay: "0.2s" }}
-          >
-            <Badge className="mb-6 bg-[#4A6FA5] text-white hover:bg-[#FF8A5B] px-4 py-1">Limited Time Offer</Badge>
-            <h2 className="text-3xl font-bold tracking-tighter text-[#172A3A] sm:text-4xl md:text-5xl">
-              Ready to Start Their Tech Journey?
-            </h2>
-            <p className="mx-auto mt-4 max-w-[600px] text-[#4A6FA5] md:text-xl">
-              Join thousands of families preparing their children for the future with engaging tech education. Get 20%
-              off your first month with code <span className="font-bold">TECHKIDS20</span>.
-            </p>
-            <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-              <Button
-                size="lg"
-                className="bg-[#4A6FA5] text-white hover:bg-[#FF8A5B] transition-transform hover:scale-105 duration-300 animate-bounce"
-                style={{ animationDuration: "4s", animationIterationCount: "3" }}
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.1 }}
+              transition={{ duration: 0.7 }}
+            >
+              <Carousel
+                opts={{
+                  align: "start",
+                  loop: true,
+                }}
+                className="w-full"
               >
-                Sign Up Now
-              </Button>
-            </div>
-          </div>
+                <CarouselContent className="-ml-3 sm:-ml-4">
+                  {courses.map((course, index) => (
+                    <CarouselItem key={course._id} className="pl-3 sm:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
+                      <motion.div
+                        custom={index}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        viewport={{ once: true, amount: 0.3 }}
+                        className="h-full"
+                      >
+                        <CourseCard course={course} />
+                      </motion.div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <div className="flex justify-center mt-10 gap-3">
+                  <CarouselPrevious className="static transform text-white bg-[#172A3A] hover:bg-[#FF8A5B] hover:text-white border-2 border-[#FF8A5B]/50 hover:border-[#FF8A5B] transition-all duration-300 rounded-lg w-10 h-10 sm:w-12 sm:h-12 disabled:opacity-50 disabled:hover:bg-[#172A3A] disabled:hover:text-white" />
+                  <CarouselNext className="static transform text-white bg-[#172A3A] hover:bg-[#FF8A5B] hover:text-white border-2 border-[#FF8A5B]/50 hover:border-[#FF8A5B] transition-all duration-300 rounded-lg w-10 h-10 sm:w-12 sm:h-12 disabled:opacity-50 disabled:hover:bg-[#172A3A] disabled:hover:text-white" />
+                </div>
+              </Carousel>
+            </motion.div>
+          )}
+
+          <motion.div 
+            className="text-center mt-16"
+            initial={{ opacity: 0, y: 20}}
+            whileInView={{ opacity: 1, y: 0}}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Button 
+              size="lg" 
+              asChild
+              className="bg-gradient-to-r from-[#FF8A5B] to-[#4A6FA5] hover:from-[#4A6FA5] hover:to-[#FF8A5B] text-white border-none shadow-[0_0_15px_rgba(255,138,91,0.5)] hover:shadow-[0_0_25px_rgba(255,138,91,0.7)] transition-all duration-300 text-base h-14 px-10 rounded-xl font-semibold tracking-wide"
+            >
+              <Link href="/courses">View All Courses</Link>
+            </Button>
+          </motion.div>
         </div>
       </section>
+
+      {/* Replace the old testimonials section with the new component */}
+      <Testimonials />
+
+      {/* Replace Parent Dashboard Preview with new CTA section */}
+      <section className="py-20 md:py-28 bg-gradient-to-br from-[#172A3A] via-[#1B263B] to-[#172A3A] relative overflow-hidden">
+        {/* Background decorative elements (subtle) */}
+        <div className="absolute inset-0 z-0 opacity-30">
+          <motion.div 
+            className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-[#4A6FA5] blur-[100px] opacity-40"
+            animate={{ 
+              scale: [1, 1.1, 1],
+              x: [0, 20, 0],
+            }}
+            transition={{ duration: 15, repeat: Infinity, repeatType: "reverse"}}
+          />
+          <motion.div 
+            className="absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-[#FF8A5B] blur-[120px] opacity-30"
+            animate={{ 
+              scale: [1, 1.05, 1],
+              y: [0, -20, 0],
+            }}
+            transition={{ duration: 18, repeat: Infinity, repeatType: "reverse", delay: 2}}
+          />
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div 
+            className="max-w-3xl mx-auto text-center bg-[#172A3A]/60 backdrop-blur-lg p-8 sm:p-12 md:p-16 rounded-xl shadow-2xl border border-[#4A6FA5]/30"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+          >
+            <motion.div 
+              className="mb-6 flex justify-center"
+              initial={{ scale: 0.5, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.5, delay: 0.2, type: "spring", stiffness: 200 }}
+            >
+              <div className="p-3 rounded-full bg-gradient-to-br from-[#4A6FA5] to-[#FF8A5B] shadow-lg">
+                <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+              </div>
+            </motion.div>
+
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-white leading-tight">
+              Shape Your Child's <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#4A6FA5] via-[#FF8A5B] to-[#4A6FA5]">Digital Future</span> Today
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl mb-10 text-gray-300 max-w-xl mx-auto">
+              Give your child the gift of technological literacy and creative problem-solving skills. Our engaging courses are designed to spark curiosity and build a strong foundation for tomorrow's world.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6">
+              <motion.div
+                whileHover={{ scale: 1.03, boxShadow: "0 0 25px rgba(255, 138, 91, 0.6)" }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto bg-gradient-to-r from-[#FF8A5B] to-[#4A6FA5] hover:from-[#4A6FA5] hover:to-[#FF8A5B] text-white border-none shadow-[0_0_15px_rgba(255,138,91,0.4)] transition-all duration-300 text-base md:text-lg h-14 px-8 sm:px-10 rounded-xl font-semibold tracking-wide"
+                  asChild
+                >
+                  <Link href="/register">Enroll Now</Link>
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.03, boxShadow: "0 0 20px rgba(74, 111, 165, 0.5)" }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto border-2 border-[#4A6FA5] text-[#4A6FA5] hover:bg-[#4A6FA5]/10 hover:text-white hover:border-white transition-all duration-300 text-base md:text-lg h-14 px-8 sm:px-10 rounded-xl font-semibold tracking-wide"
+                  asChild
+                >
+                  <Link href="/courses">Browse Courses</Link>
+                </Button>
+              </motion.div>
+            </div>
+            <p className="mt-10 text-sm text-gray-400">
+              Classes are filling up fast! Reserve your spot today and unlock a world of possibilities.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

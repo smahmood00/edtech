@@ -128,3 +128,13 @@
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
 }
+
+@layer utilities {
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

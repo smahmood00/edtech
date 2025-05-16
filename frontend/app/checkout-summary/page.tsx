@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CreditCard, Banknote, Loader2 } from "lucide-react";
 import { LoginFlow } from "@/components/auth/LoginFlow";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { loadStripe } from '@stripe/stripe-js';
 import { toast } from "@/components/ui/use-toast";
 
@@ -28,6 +30,11 @@ function CheckoutSummaryContent() {
   const [selectedPayment, setSelectedPayment] = useState<'credit' | 'fps' | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [enrollmentType, setEnrollmentType] = useState<'myself' | 'child'>('myself');
+  const [age, setAge] = useState('');
+  const [childFirstName, setChildFirstName] = useState('');
+  const [childLastName, setChildLastName] = useState('');
+  const [childAge, setChildAge] = useState('');
 
   useEffect(() => {
     // Check if user is logged in
@@ -50,6 +57,77 @@ function CheckoutSummaryContent() {
 
   const handlePaymentSelect = (method: 'credit' | 'fps') => {
     setSelectedPayment(method);
+  };
+
+  const handlePayment = async (paymentMethod: 'credit' | 'fps') => {
+    try {
+      setIsProcessing(true);
+      setError('');
+
+      // Check if email is available
+      if (!userEmail || userEmail.trim() === '') {
+        throw new Error('User email is missing. Please try logging in again.');
+      }
+
+      // Store enrollment data in localStorage
+      if (enrollmentType === 'myself') {
+        localStorage.setItem('enrollmentData', JSON.stringify({
+          type: 'myself',
+          age
+        }));
+      } else {
+        localStorage.setItem('enrollmentData', JSON.stringify({
+          type: 'child',
+          firstName: childFirstName,
+          lastName: childLastName,
+          age: childAge
+        }));
+      }
+
+      const stripe = await stripePromise;
+      if (!stripe) throw new Error('Stripe failed to initialize');
+
+      console.log('Sending checkout request with email:', userEmail);
+
+      const response = await fetch(`${API_BASE_URL}/api/payment/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          courseName,
+          price,
+          userEmail,
+          paymentMethod,
+          successUrl: `${window.location.origin}/payment/success`,
+          cancelUrl: `${window.location.origin}/payment/failure`
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session');
+      }
+
+      const session = await response.json();
+      const result = await stripe.redirectToCheckout({
+        sessionId: session.id,
+      });
+
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+    } catch (error: any) {
+      setError(error.message || 'An error occurred during payment');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || 'An error occurred during checkout',
+      });
+      console.error('Payment error:', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -98,7 +176,6 @@ function CheckoutSummaryContent() {
               showBackButton={false}
               showGoogleSignIn={false}
               onLoginSuccess={() => setIsLoggedIn(true)}
-              // Remove redirectPath prop to prevent navigation
             />
           </CardContent>
         </Card>
@@ -109,6 +186,83 @@ function CheckoutSummaryContent() {
           </CardHeader>
           <CardContent>
             <p>Signed in as: {userEmail}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Enrollment Type Section */}
+      {isLoggedIn && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Buy this course for</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-4">
+              <Button 
+                variant={enrollmentType === 'myself' ? 'default' : 'outline'}
+                className="w-full"
+                onClick={() => setEnrollmentType('myself')}
+              >
+                Myself
+              </Button>
+              <Button 
+                variant={enrollmentType === 'child' ? 'default' : 'outline'}
+                className="w-full"
+                onClick={() => setEnrollmentType('child')}
+              >
+                My Child
+              </Button>
+            </div>
+
+            {enrollmentType === 'myself' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="age">Your Age</Label>
+                  <Input 
+                    id="age" 
+                    type="number" 
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    placeholder="Enter your age"
+                  />
+                </div>
+              </div>
+            )}
+
+            {enrollmentType === 'child' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="childFirstName">Child's First Name</Label>
+                  <Input 
+                    id="childFirstName" 
+                    type="text" 
+                    value={childFirstName}
+                    onChange={(e) => setChildFirstName(e.target.value)}
+                    placeholder="First name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="childLastName">Child's Last Name</Label>
+                  <Input 
+                    id="childLastName" 
+                    type="text" 
+                    value={childLastName}
+                    onChange={(e) => setChildLastName(e.target.value)}
+                    placeholder="Last name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="childAge">Child's Age</Label>
+                  <Input 
+                    id="childAge" 
+                    type="number" 
+                    value={childAge}
+                    onChange={(e) => setChildAge(e.target.value)}
+                    placeholder="Age"
+                  />
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -141,59 +295,7 @@ function CheckoutSummaryContent() {
               <Button 
                 className="w-full bg-green-600 hover:bg-green-700"
                 disabled={isProcessing}
-                onClick={async () => {
-                  setIsProcessing(true);
-                  setError('');
-                  try {
-                    // Check if email is available
-                    if (!userEmail || userEmail.trim() === '') {
-                      throw new Error('User email is missing. Please try logging in again.');
-                    }
-
-                    const stripe = await stripePromise;
-                    if (!stripe) throw new Error('Stripe failed to initialize');
-
-                    console.log('Sending checkout request with email:', userEmail);
-
-                    const response = await fetch(`${API_BASE_URL}/api/payment/create-checkout-session`, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                      },
-                      body: JSON.stringify({
-                        courseName,
-                        price,
-                        userEmail,
-                        paymentMethod: selectedPayment,
-                        successUrl: `${window.location.origin}/payment/success`,
-                        cancelUrl: `${window.location.origin}/payment/failure`
-                      }),
-                    });
-
-                    if (!response.ok) {
-                      throw new Error('Failed to create checkout session');
-                    }
-
-                    const session = await response.json();
-                    const result = await stripe.redirectToCheckout({
-                      sessionId: session.id,
-                    });
-
-                    if (result.error) {
-                      throw new Error(result.error.message);
-                    }
-                  } catch (error: any) {
-                    setError(error.message || 'An error occurred during checkout');
-                    toast({
-                      variant: "destructive",
-                      title: "Error",
-                      description: error.message || 'An error occurred during checkout',
-                    });
-                  } finally {
-                    setIsProcessing(false);
-                  }
-                }}
+                onClick={() => handlePayment(selectedPayment)}
               >
                 {isProcessing ? (
                   <>

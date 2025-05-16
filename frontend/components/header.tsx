@@ -24,11 +24,7 @@ export function Header() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY
-      if (currentScrollY > lastScrollY) {
-        setIsVisible(false)
-      } else {
-        setIsVisible(true)
-      }
+      setIsVisible(true)
       setLastScrollY(currentScrollY)
       setIsScrolled(currentScrollY > 10)
     }
@@ -92,15 +88,15 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-0 z-50 w-full border-b border-pink bg-white transition-transform duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 w-full  bg-transparent  transition-transform duration-300 ${
         isVisible ? "translate-y-0" : "-translate-y-full"
-      } ${isScrolled ? "shadow-md" : ""}`}
+      } `}
     >
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center">
-            <span className="text-2xl font-bold bg-gradient-to-r from-[#4A6FA5] to-[#FF8A5B] bg-clip-text text-transparent">
-              TechKids
+            <span className="text-2xl font-bold bg-gradient-to-r from-[#4A6FA5] to-[#FF8A5B] bg-clip-text text-transparent animate-gradient" style={{ animationDuration: "3s" }}>
+              Eveagle Academy
             </span>
           </Link>
         </div>

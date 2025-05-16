@@ -12,4 +12,9 @@ router.get('/dashboard', auth, (req, res) => {
   res.json({ message: 'Welcome to dashboard' });
 });
 
+// Protected routes
+router.get('/verify-auth', auth, (req, res) => {
+  res.status(200).json({ message: 'Token is valid' });
+});
+
 module.exports = router;

@@ -14,6 +14,9 @@ const userSchema = new mongoose.Schema({
   lastName: {
     type: String,
   },
+  age: {
+    type: Number,
+  },
   phoneNumber: {
     type: String,
   },
@@ -21,6 +24,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  children: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Child'
+  }],
   createdAt: {
     type: Date,
     default: Date.now,
