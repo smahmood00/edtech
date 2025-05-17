@@ -46,6 +46,11 @@ exports.createCheckoutSession = async (req, res) => {
     // First create the Stripe session
     let session;
     try {
+      console.log('\n=== Creating Stripe Checkout Session ===');
+      console.log('Course:', courseName);
+      console.log('User ID:', userId);
+      console.log('Email:', customerEmail);
+
       session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [
@@ -62,34 +67,34 @@ exports.createCheckoutSession = async (req, res) => {
           },
         ],
         mode: 'payment',
-        success_url: successUrl,
+        success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: cancelUrl,
-        customer_email: customerEmail, // Use the validated email
+        customer_email: customerEmail,
         metadata: {
           userId: userId.toString(),
-          courseId: course._id.toString()
+          courseId: course._id.toString(),
+          enrollmentData: JSON.stringify(req.body.enrollmentData)
         }
       });
       
-      console.log('Stripe session created:', session.id);
-    } catch (stripeError) {
-      console.error('Stripe error:', stripeError);
-      return res.status(500).json({ message: 'Error with payment processor', error: stripeError.message });
-    }
+      console.log('\n=== Stripe Session Created ===');
+      console.log('Session ID:', session.id);
+      console.log('Payment Intent:', session.payment_intent);
 
-    // Now create the payment record using direct MongoDB operation to bypass Mongoose validation
-    try {
+      // Create the payment record
       const payment = await Payment.create({
         userId: new mongoose.Types.ObjectId(userId),
         courseId: course._id,
         amount: price,
         paymentMethod,
         status: 'pending',
-        stripeSessionId: session.id // Include the session ID here
+        stripeSessionId: session.id
       });
       
-      console.log('Payment saved with ID:', payment._id);
-      
+      console.log('\n=== Payment Record Created ===');
+      console.log('Payment ID:', payment._id);
+      console.log('Stripe Session ID:', payment.stripeSessionId);
+
       // Update Stripe session with paymentId
       await stripe.checkout.sessions.update(session.id, {
         metadata: {
@@ -98,21 +103,21 @@ exports.createCheckoutSession = async (req, res) => {
         }
       });
       
-      console.log('Session metadata updated with payment ID');
+      console.log('\n=== Session Metadata Updated ===');
+      console.log('Updated metadata:', {
+        ...session.metadata,
+        paymentId: payment._id.toString()
+      });
       
       return res.json({ id: session.id });
-    } catch (dbError) {
-      console.error('Database error:', dbError);
-      
-      // If we can't create the payment record, cancel the session
-      try {
-        await stripe.checkout.sessions.expire(session.id);
-        console.log('Session expired due to payment record creation failure');
-      } catch (expireError) {
-        console.error('Error expiring session:', expireError);
-      }
-      
-      return res.status(500).json({ message: 'Error creating payment record', error: dbError.message });
+    } catch (error) {
+      console.error('\n=== Error in Payment Flow ===');
+      console.error('Error:', error);
+      return res.status(500).json({ 
+        message: 'Error in payment flow', 
+        error: error.message,
+        details: error.stack
+      });
     }
   } catch (error) {
     console.error('Error creating checkout session:', error);
@@ -120,18 +125,168 @@ exports.createCheckoutSession = async (req, res) => {
   }
 };
 
+exports.getPaymentHistory = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const payments = await Payment.find({ userId })
+      .populate('courseId', 'courseName')
+      .sort({ createdAt: -1 });
+
+    res.json(payments);
+  } catch (error) {
+    console.error('Error fetching payment history:', error);
+    res.status(500).json({ message: 'Error fetching payment history' });
+  }
+};
+
+exports.verifyPayment = async (req, res) => {
+  try {
+    const { session_id } = req.query;
+    
+    console.log('\n=== Verifying Payment ===');
+    console.log('Session ID:', session_id);
+    
+    if (!session_id) {
+      return res.status(400).json({ success: false, message: 'Session ID is required' });
+    }
+
+    // First check our database
+    const payment = await Payment.findOne({ stripeSessionId: session_id }).populate('courseId');
+    console.log('\n=== Database Payment Record ===');
+    console.log('Payment found:', payment ? 'Yes' : 'No');
+    if (payment) {
+      console.log('Payment ID:', payment._id);
+      console.log('Status:', payment.status);
+    }
+
+    // Retrieve the session from Stripe
+    console.log('\n=== Retrieving Stripe Session ===');
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    console.log('Stripe Session Status:', session.payment_status);
+    console.log('Stripe Session Metadata:', session.metadata);
+    
+    // Check if the payment was successful
+    if (session.payment_status !== 'paid') {
+      return res.status(400).json({ success: false, message: 'Payment not completed' });
+    }
+
+    if (!payment) {
+      console.log('\n=== Creating Missing Payment Record ===');
+      // If payment record doesn't exist, create it
+      const newPayment = await Payment.create({
+        userId: new mongoose.Types.ObjectId(session.metadata.userId),
+        courseId: new mongoose.Types.ObjectId(session.metadata.courseId),
+        amount: session.amount_total / 100, // Convert from cents
+        paymentMethod: 'credit', // Default to credit for Stripe
+        status: 'completed',
+        stripeSessionId: session_id,
+        completedAt: new Date()
+      });
+      console.log('Created new payment record:', newPayment._id);
+      
+      // Get user for the new payment
+      const user = await User.findById(session.metadata.userId);
+      if (!user) {
+        console.error('User not found for new payment');
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      try {
+        // Add course to user's enrolled courses
+        await User.findByIdAndUpdate(
+          user._id,
+          { $addToSet: { enrolledCourses: newPayment.courseId } }
+        );
+        console.log('Added course to user enrolled courses');
+
+        // Send confirmation email
+        console.log('\n=== Sending Confirmation Email ===');
+        console.log('Email configuration:', {
+          email: user.email,
+          courseName: session.metadata.courseName || 'Course',
+          amount: newPayment.amount
+        });
+
+        await emailService.sendPaymentConfirmation(
+          user.email,
+          session.metadata.courseName || 'Course',
+          newPayment.amount,
+          newPayment._id.toString()
+        );
+        console.log('Confirmation email sent successfully');
+      } catch (emailError) {
+        console.error('Error sending confirmation email:', emailError);
+        // Don't throw the error, just log it
+      }
+
+      return res.json({ success: true, payment: newPayment });
+    }
+
+    if (payment.status !== 'completed') {
+      // Update payment status if not already completed
+      payment.status = 'completed';
+      payment.completedAt = new Date();
+      await payment.save();
+      console.log('Updated payment status to completed');
+
+      // Get user and send confirmation email
+      const user = await User.findById(payment.userId);
+      if (!user) {
+        console.error('User not found for existing payment');
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      try {
+        // Add course to user's enrolled courses
+        await User.findByIdAndUpdate(
+          payment.userId,
+          { $addToSet: { enrolledCourses: payment.courseId } }
+        );
+        console.log('Added course to user enrolled courses');
+
+        // Send confirmation email
+        console.log('\n=== Sending Confirmation Email ===');
+        console.log('Email configuration:', {
+          email: user.email,
+          courseName: payment.courseId.courseName,
+          amount: payment.amount
+        });
+
+        await emailService.sendPaymentConfirmation(
+          user.email,
+          payment.courseId.courseName,
+          payment.amount,
+          payment._id.toString()
+        );
+        console.log('Confirmation email sent successfully');
+      } catch (emailError) {
+        console.error('Error sending confirmation email:', emailError);
+        // Don't throw the error, just log it
+      }
+    }
+
+    return res.json({ success: true, payment });
+  } catch (error) {
+    console.error('\n=== Error Verifying Payment ===');
+    console.error('Error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Error verifying payment', 
+      error: error.message,
+      details: error.stack
+    });
+  }
+};
+
 exports.handleWebhook = async (req, res) => {
-  console.log('Webhook endpoint called');
-  console.log('Headers:', JSON.stringify(req.headers));
+  console.log('\n=== Webhook Request Received ===');
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
   
   const sig = req.headers['stripe-signature'];
   if (!sig) {
     console.error('No Stripe signature found in request headers');
     return res.status(400).send('Webhook Error: No Stripe signature');
   }
-  
-  console.log('Request body type:', typeof req.body);
-  console.log('Stripe-Signature:', sig);
   
   let event;
 
@@ -141,10 +296,13 @@ exports.handleWebhook = async (req, res) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-    console.log('Webhook verified and constructed successfully');
-    console.log('Event type:', event.type);
+    console.log('\n=== Webhook Event Constructed ===');
+    console.log('Event Type:', event.type);
+    console.log('Event ID:', event.id);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
+    console.error('\n=== Webhook Signature Verification Failed ===');
+    console.error('Error:', err.message);
+    console.error('Stripe-Signature header:', sig);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -152,7 +310,11 @@ exports.handleWebhook = async (req, res) => {
   switch (event.type) {
     case 'checkout.session.completed':
       const session = event.data.object;
-      console.log('Checkout session completed:', session.id);
+      console.log('\n=== Processing Completed Checkout Session ===');
+      console.log('Session ID:', session.id);
+      console.log('Customer Email:', session.customer_email);
+      console.log('Payment Status:', session.payment_status);
+      console.log('Session Metadata:', session.metadata);
       
       try {
         // Update payment status
@@ -170,19 +332,29 @@ exports.handleWebhook = async (req, res) => {
           break;
         }
         
-        console.log('Payment updated:', payment._id);
+        console.log('\n=== Payment Record Updated ===');
+        console.log('Payment ID:', payment._id);
+        console.log('Course:', payment.courseId.courseName);
+        console.log('Amount:', payment.amount);
         
-        // Get user email and course details
+        // Get user and process enrollment
         const user = await User.findById(payment.userId);
-        
-        if (!user || !user.email) {
-          console.error('User email not found for payment:', payment._id);
+        if (!user) {
+          console.error('User not found for payment:', payment._id);
           break;
         }
+
+        // Add course to user's enrolled courses
+        await User.findByIdAndUpdate(
+          payment.userId,
+          { $addToSet: { enrolledCourses: payment.courseId } }
+        );
         
-        console.log('Sending confirmation email to user:', user.email);
-        
-        // Send confirmation email
+        console.log('\n=== User Enrollment Updated ===');
+        console.log('User ID:', user._id);
+        console.log('Course Added:', payment.courseId._id);
+
+        // Send payment confirmation email
         await emailService.sendPaymentConfirmation(
           user.email,
           payment.courseId.courseName,
@@ -190,15 +362,49 @@ exports.handleWebhook = async (req, res) => {
           payment._id.toString()
         );
         
-        console.log('Payment confirmation email sent to:', user.email);
+        console.log('\n=== Payment Confirmation Email Sent ===');
+        console.log('Email sent to:', user.email);
+
+        // Send webhook confirmation email
+        await emailService.sendEmail(
+          user.email,
+          'Webhook Processed Successfully',
+          `Your payment for ${payment.courseId.courseName} has been successfully processed by our webhook system.`,
+          `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <h2 style="color: #4F46E5; text-align: center;">Webhook Processing Confirmation</h2>
+            
+            <p>Dear ${user.firstName || 'Student'},</p>
+            
+            <p>This is a technical confirmation that our webhook system has successfully processed your payment for <strong>${payment.courseId.courseName}</strong>.</p>
+            
+            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <h3 style="margin-top: 0;">Processing Details:</h3>
+              <p><strong>Event ID:</strong> ${event.id}</p>
+              <p><strong>Event Type:</strong> ${event.type}</p>
+              <p><strong>Processing Time:</strong> ${new Date().toISOString()}</p>
+            </div>
+            
+            <p>Your enrollment has been confirmed and the course has been added to your account.</p>
+            
+            <p style="margin-top: 30px;">Best regards,<br>EdTech System</p>
+          </div>
+          `
+        );
+        
+        console.log('\n=== Webhook Confirmation Email Sent ===');
+        console.log('Email sent to:', user.email);
+        
       } catch (error) {
-        console.error('Error processing payment completion:', error);
+        console.error('\n=== Error Processing Payment Completion ===');
+        console.error('Error:', error);
       }
       break;
 
     case 'checkout.session.expired':
       const expiredSession = event.data.object;
-      console.log('Session expired:', expiredSession.id);
+      console.log('\n=== Processing Expired Session ===');
+      console.log('Session ID:', expiredSession.id);
       
       const expiredPayment = await Payment.findOneAndUpdate(
         { stripeSessionId: expiredSession.id },
@@ -210,24 +416,9 @@ exports.handleWebhook = async (req, res) => {
       break;
       
     default:
-      console.log(`Unhandled event type: ${event.type}`);
+      console.log(`\n=== Unhandled Event Type: ${event.type} ===`);
   }
 
   // Return a 200 response to acknowledge receipt of the event
-  console.log('Sending 200 response for webhook');
   res.json({ received: true });
-};
-
-exports.getPaymentHistory = async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const payments = await Payment.find({ userId })
-      .populate('courseId', 'courseName')
-      .sort({ createdAt: -1 });
-
-    res.json(payments);
-  } catch (error) {
-    console.error('Error fetching payment history:', error);
-    res.status(500).json({ message: 'Error fetching payment history' });
-  }
 }; 

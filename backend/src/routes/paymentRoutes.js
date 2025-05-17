@@ -12,4 +12,7 @@ router.post('/webhook', express.raw({type: 'application/json'}), paymentControll
 // Get payment history for a user
 router.get('/history', auth, paymentController.getPaymentHistory);
 
+// Verify payment and process enrollment
+router.get('/verify', auth, paymentController.verifyPayment);
+
 module.exports = router; 

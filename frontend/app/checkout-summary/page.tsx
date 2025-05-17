@@ -70,19 +70,14 @@ function CheckoutSummaryContent() {
       }
 
       // Store enrollment data in localStorage
-      if (enrollmentType === 'myself') {
-        localStorage.setItem('enrollmentData', JSON.stringify({
-          type: 'myself',
-          age
-        }));
-      } else {
-        localStorage.setItem('enrollmentData', JSON.stringify({
-          type: 'child',
-          firstName: childFirstName,
-          lastName: childLastName,
-          age: childAge
-        }));
-      }
+      const enrollmentData = enrollmentType === 'myself' 
+        ? { type: 'myself', age }
+        : {
+            type: 'child',
+            firstName: childFirstName,
+            lastName: childLastName,
+            age: childAge
+          };
 
       const stripe = await stripePromise;
       if (!stripe) throw new Error('Stripe failed to initialize');
@@ -100,6 +95,7 @@ function CheckoutSummaryContent() {
           price,
           userEmail,
           paymentMethod,
+          enrollmentData,
           successUrl: `${window.location.origin}/payment/success`,
           cancelUrl: `${window.location.origin}/payment/failure`
         }),
