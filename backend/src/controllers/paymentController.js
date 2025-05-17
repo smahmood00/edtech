@@ -4,6 +4,7 @@ const Course = require('../models/Course');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const emailService = require('../utils/emailService');
+const Child = require('../models/Child');
 
 exports.createCheckoutSession = async (req, res) => {
   try {
@@ -199,6 +200,35 @@ exports.verifyPayment = async (req, res) => {
         );
         console.log('Added course to user enrolled courses');
 
+        // Process enrollment data
+        const enrollmentData = JSON.parse(session.metadata.enrollmentData);
+        console.log('\n=== Processing Enrollment Data ===');
+        console.log('Enrollment Type:', enrollmentData.type);
+
+        if (enrollmentData.type === 'myself') {
+          // Update user with age
+          await User.findByIdAndUpdate(user._id, { 
+            age: enrollmentData.age 
+          });
+          console.log('Updated user age:', enrollmentData.age);
+        } else if (enrollmentData.type === 'child') {
+          // Create new child record
+          const child = await Child.create({
+            firstName: enrollmentData.firstName,
+            lastName: enrollmentData.lastName,
+            age: enrollmentData.age,
+            parent: user._id
+          });
+          console.log('Created child record:', child._id);
+
+          // Add child to user's children array
+          await User.findByIdAndUpdate(
+            user._id,
+            { $addToSet: { children: child._id } }
+          );
+          console.log('Added child to user\'s children array');
+        }
+
         // Send confirmation email
         console.log('\n=== Sending Confirmation Email ===');
         console.log('Email configuration:', {
@@ -243,6 +273,35 @@ exports.verifyPayment = async (req, res) => {
           { $addToSet: { enrolledCourses: payment.courseId } }
         );
         console.log('Added course to user enrolled courses');
+
+        // Process enrollment data
+        const enrollmentData = JSON.parse(session.metadata.enrollmentData);
+        console.log('\n=== Processing Enrollment Data ===');
+        console.log('Enrollment Type:', enrollmentData.type);
+
+        if (enrollmentData.type === 'myself') {
+          // Update user with age
+          await User.findByIdAndUpdate(user._id, { 
+            age: enrollmentData.age 
+          });
+          console.log('Updated user age:', enrollmentData.age);
+        } else if (enrollmentData.type === 'child') {
+          // Create new child record
+          const child = await Child.create({
+            firstName: enrollmentData.firstName,
+            lastName: enrollmentData.lastName,
+            age: enrollmentData.age,
+            parent: user._id
+          });
+          console.log('Created child record:', child._id);
+
+          // Add child to user's children array
+          await User.findByIdAndUpdate(
+            user._id,
+            { $addToSet: { children: child._id } }
+          );
+          console.log('Added child to user\'s children array');
+        }
 
         // Send confirmation email
         console.log('\n=== Sending Confirmation Email ===');
