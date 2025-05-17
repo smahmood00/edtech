@@ -201,16 +201,6 @@ exports.verifyPayment = async (req, res) => {
         );
         console.log('Added course to user enrolled courses');
 
-        // Create enrollment record
-        await Enrollment.create({
-          studentId: user._id,
-          studentType: 'User',
-          courseId: newPayment.courseId,
-          enrollmentDate: new Date(),
-          status: 'active'
-        });
-        console.log('Created enrollment record for user');
-
         // Process enrollment data
         const enrollmentData = JSON.parse(session.metadata.enrollmentData);
         console.log('\n=== Processing Enrollment Data ===');
@@ -222,6 +212,16 @@ exports.verifyPayment = async (req, res) => {
             age: enrollmentData.age 
           });
           console.log('Updated user age:', enrollmentData.age);
+
+          // Create enrollment record for user
+          await Enrollment.create({
+            studentId: user._id,
+            studentType: 'User',
+            courseId: payment ? payment.courseId : newPayment.courseId,
+            enrollmentDate: new Date(),
+            status: 'active'
+          });
+          console.log('Created enrollment record for user');
         } else if (enrollmentData.type === 'child') {
           // Create new child record
           const child = await Child.create({
@@ -243,7 +243,7 @@ exports.verifyPayment = async (req, res) => {
           await Enrollment.create({
             studentId: child._id,
             studentType: 'Child',
-            courseId: newPayment.courseId,
+            courseId: payment ? payment.courseId : newPayment.courseId,
             enrollmentDate: new Date(),
             status: 'active'
           });
@@ -306,6 +306,16 @@ exports.verifyPayment = async (req, res) => {
             age: enrollmentData.age 
           });
           console.log('Updated user age:', enrollmentData.age);
+
+          // Create enrollment record for user
+          await Enrollment.create({
+            studentId: user._id,
+            studentType: 'User',
+            courseId: payment ? payment.courseId : newPayment.courseId,
+            enrollmentDate: new Date(),
+            status: 'active'
+          });
+          console.log('Created enrollment record for user');
         } else if (enrollmentData.type === 'child') {
           // Create new child record
           const child = await Child.create({
@@ -327,7 +337,7 @@ exports.verifyPayment = async (req, res) => {
           await Enrollment.create({
             studentId: child._id,
             studentType: 'Child',
-            courseId: newPayment.courseId,
+            courseId: payment ? payment.courseId : newPayment.courseId,
             enrollmentDate: new Date(),
             status: 'active'
           });
