@@ -27,7 +27,6 @@ function CheckoutSummaryContent() {
   const searchParams = useSearchParams();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState('');
-  const [selectedPayment, setSelectedPayment] = useState<'credit' | 'fps' | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [enrollmentType, setEnrollmentType] = useState<'myself' | 'child'>('myself');
@@ -271,38 +270,23 @@ function CheckoutSummaryContent() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Button
-              variant={selectedPayment === 'credit' ? 'default' : 'outline'}
+              variant="default"
               className="w-full flex items-center justify-center"
-              onClick={() => handlePaymentSelect('credit')}
+              onClick={() => handlePayment('credit')}
+              disabled={isProcessing}
             >
-              <CreditCard className="mr-2 h-4 w-4" />
-              Pay with Credit Card
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Pay with Credit Card
+                </>
+              )}
             </Button>
-            <Button
-              variant={selectedPayment === 'fps' ? 'default' : 'outline'}
-              className="w-full flex items-center justify-center"
-              onClick={() => handlePaymentSelect('fps')}
-            >
-              <Banknote className="mr-2 h-4 w-4" />
-              FPS Transfer
-            </Button>
-            
-            {selectedPayment && (
-              <Button 
-                className="w-full bg-green-600 hover:bg-green-700"
-                disabled={isProcessing}
-                onClick={() => handlePayment(selectedPayment)}
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  'Pay Now'
-                )}
-              </Button>
-            )}
             {error && (
               <p className="text-sm text-red-600 mt-2">{error}</p>
             )}

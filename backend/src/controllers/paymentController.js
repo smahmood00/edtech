@@ -5,6 +5,7 @@ const User = require('../models/User');
 const mongoose = require('mongoose');
 const emailService = require('../utils/emailService');
 const Child = require('../models/Child');
+const Enrollment = require('../models/Enrollment');
 
 exports.createCheckoutSession = async (req, res) => {
   try {
@@ -200,6 +201,16 @@ exports.verifyPayment = async (req, res) => {
         );
         console.log('Added course to user enrolled courses');
 
+        // Create enrollment record
+        await Enrollment.create({
+          studentId: user._id,
+          studentType: 'User',
+          courseId: newPayment.courseId,
+          enrollmentDate: new Date(),
+          status: 'active'
+        });
+        console.log('Created enrollment record for user');
+
         // Process enrollment data
         const enrollmentData = JSON.parse(session.metadata.enrollmentData);
         console.log('\n=== Processing Enrollment Data ===');
@@ -227,6 +238,16 @@ exports.verifyPayment = async (req, res) => {
             { $addToSet: { children: child._id } }
           );
           console.log('Added child to user\'s children array');
+
+          // Create enrollment record for child
+          await Enrollment.create({
+            studentId: child._id,
+            studentType: 'Child',
+            courseId: newPayment.courseId,
+            enrollmentDate: new Date(),
+            status: 'active'
+          });
+          console.log('Created enrollment record for child');
         }
 
         // Send confirmation email
@@ -301,6 +322,16 @@ exports.verifyPayment = async (req, res) => {
             { $addToSet: { children: child._id } }
           );
           console.log('Added child to user\'s children array');
+
+          // Create enrollment record for child
+          await Enrollment.create({
+            studentId: child._id,
+            studentType: 'Child',
+            courseId: newPayment.courseId,
+            enrollmentDate: new Date(),
+            status: 'active'
+          });
+          console.log('Created enrollment record for child');
         }
 
         // Send confirmation email
@@ -480,4 +511,4 @@ exports.handleWebhook = async (req, res) => {
 
   // Return a 200 response to acknowledge receipt of the event
   res.json({ received: true });
-}; 
+};
