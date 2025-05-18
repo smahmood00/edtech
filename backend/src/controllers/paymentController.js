@@ -223,21 +223,32 @@ exports.verifyPayment = async (req, res) => {
           });
           console.log('Created enrollment record for user');
         } else if (enrollmentData.type === 'child') {
-          // Create new child record
-          const child = await Child.create({
+          // Check if child already exists
+          let child = await Child.findOne({
             firstName: enrollmentData.firstName,
             lastName: enrollmentData.lastName,
-            age: enrollmentData.age,
             parent: user._id
           });
-          console.log('Created child record:', child._id);
 
-          // Add child to user's children array
-          await User.findByIdAndUpdate(
-            user._id,
-            { $addToSet: { children: child._id } }
-          );
-          console.log('Added child to user\'s children array');
+          if (!child) {
+            // Create new child record only if it doesn't exist
+            child = await Child.create({
+              firstName: enrollmentData.firstName,
+              lastName: enrollmentData.lastName,
+              age: enrollmentData.age,
+              parent: user._id
+            });
+            console.log('Created new child record:', child._id);
+
+            // Add child to user's children array
+            await User.findByIdAndUpdate(
+              user._id,
+              { $addToSet: { children: child._id } }
+            );
+            console.log('Added child to user\'s children array');
+          } else {
+            console.log('Using existing child record:', child._id);
+          }
 
           // Create enrollment record for child
           await Enrollment.create({
@@ -317,21 +328,32 @@ exports.verifyPayment = async (req, res) => {
           });
           console.log('Created enrollment record for user');
         } else if (enrollmentData.type === 'child') {
-          // Create new child record
-          const child = await Child.create({
+          // Check if child already exists
+          let child = await Child.findOne({
             firstName: enrollmentData.firstName,
             lastName: enrollmentData.lastName,
-            age: enrollmentData.age,
             parent: user._id
           });
-          console.log('Created child record:', child._id);
 
-          // Add child to user's children array
-          await User.findByIdAndUpdate(
-            user._id,
-            { $addToSet: { children: child._id } }
-          );
-          console.log('Added child to user\'s children array');
+          if (!child) {
+            // Create new child record only if it doesn't exist
+            child = await Child.create({
+              firstName: enrollmentData.firstName,
+              lastName: enrollmentData.lastName,
+              age: enrollmentData.age,
+              parent: user._id
+            });
+            console.log('Created new child record:', child._id);
+
+            // Add child to user's children array
+            await User.findByIdAndUpdate(
+              user._id,
+              { $addToSet: { children: child._id } }
+            );
+            console.log('Added child to user\'s children array');
+          } else {
+            console.log('Using existing child record:', child._id);
+          }
 
           // Create enrollment record for child
           await Enrollment.create({

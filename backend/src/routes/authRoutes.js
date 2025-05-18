@@ -17,4 +17,7 @@ router.get('/verify-auth', auth, (req, res) => {
   res.status(200).json({ message: 'Token is valid' });
 });
 
+// Get user's children
+router.get('/user/children', auth, authController.getUserChildren);
+
 module.exports = router;

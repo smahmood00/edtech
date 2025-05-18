@@ -34,6 +34,8 @@ function CheckoutSummaryContent() {
   const [childFirstName, setChildFirstName] = useState('');
   const [childLastName, setChildLastName] = useState('');
   const [childAge, setChildAge] = useState('');
+  const [showChildForm, setShowChildForm] = useState(false);
+  const [userChildren, setUserChildren] = useState([]);
 
   useEffect(() => {
     // Check if user is logged in
@@ -48,15 +50,30 @@ function CheckoutSummaryContent() {
       } else {
         console.warn('User is logged in but email is missing from localStorage');
       }
+
+      // Fetch user's children
+      fetch(`${API_BASE_URL}/api/auth/user/children`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => response.json())
+      .then(children => {
+        console.log('Fetched children:', children);
+        setUserChildren(children);
+      })
+      .catch(error => {
+        console.error('Error fetching children:', error);
+      });
     }
   }, []); // Remove userEmail from dependency array to prevent loops
 
   const courseName = searchParams.get('courseName') || 'Course Name';
   const price = Number(searchParams.get('price')) || 0;
 
-  const handlePaymentSelect = (method: 'credit' | 'fps') => {
-    setSelectedPayment(method);
-  };
+  // const handlePaymentSelect = (method: 'credit' | 'fps') => {
+  //   setSelectedPayment(method);
+  // };
 
   const handlePayment = async (paymentMethod: 'credit' | 'fps') => {
     try {
@@ -68,7 +85,7 @@ function CheckoutSummaryContent() {
         throw new Error('User email is missing. Please try logging in again.');
       }
 
-      // Store enrollment data in localStorage
+
       const enrollmentData = enrollmentType === 'myself' 
         ? { type: 'myself', age }
         : {
@@ -226,36 +243,71 @@ function CheckoutSummaryContent() {
 
             {enrollmentType === 'child' && (
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="childFirstName">Child's First Name</Label>
-                  <Input 
-                    id="childFirstName" 
-                    type="text" 
-                    value={childFirstName}
-                    onChange={(e) => setChildFirstName(e.target.value)}
-                    placeholder="First name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="childLastName">Child's Last Name</Label>
-                  <Input 
-                    id="childLastName" 
-                    type="text" 
-                    value={childLastName}
-                    onChange={(e) => setChildLastName(e.target.value)}
-                    placeholder="Last name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="childAge">Child's Age</Label>
-                  <Input 
-                    id="childAge" 
-                    type="number" 
-                    value={childAge}
-                    onChange={(e) => setChildAge(e.target.value)}
-                    placeholder="Age"
-                  />
-                </div>
+                {userChildren.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Select Child</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {userChildren.map((child) => (
+                        <Button
+                          key={child._id}
+                          variant="outline"
+                          className="w-full text-left"
+                          onClick={() => {
+                            setChildFirstName(child.firstName);
+                            setChildLastName(child.lastName);
+                            setChildAge(child.age.toString());
+                            setShowChildForm(false);
+                          }}
+                        >
+                          {child.firstName} {child.lastName}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowChildForm(true)}
+                >
+                  Add Child Profile
+                </Button>
+
+                {showChildForm && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="childFirstName">Child's First Name</Label>
+                      <Input 
+                        id="childFirstName" 
+                        type="text" 
+                        value={childFirstName}
+                        onChange={(e) => setChildFirstName(e.target.value)}
+                        placeholder="First name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="childLastName">Child's Last Name</Label>
+                      <Input 
+                        id="childLastName" 
+                        type="text" 
+                        value={childLastName}
+                        onChange={(e) => setChildLastName(e.target.value)}
+                        placeholder="Last name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="childAge">Child's Age</Label>
+                      <Input 
+                        id="childAge" 
+                        type="number" 
+                        value={childAge}
+                        onChange={(e) => setChildAge(e.target.value)}
+                        placeholder="Age"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
