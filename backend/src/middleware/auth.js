@@ -9,9 +9,17 @@ const auth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Decoded token:', decoded); // Debug log
+    
     req.user = decoded;
+    
+    if (!decoded.userId) {
+      console.log('Warning: Token does not contain userId'); // Debug log
+    }
+    
     next();
   } catch (error) {
+    console.error('Auth middleware error:', error); // Debug log
     res.status(401).json({ message: 'Invalid token' });
   }
 };

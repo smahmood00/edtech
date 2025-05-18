@@ -7,6 +7,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const courseRoutes = require('./routes/course.routes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 const app = express();
 
 // Handle raw body for Stripe webhooks
@@ -23,7 +24,7 @@ app.use(cors({
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/payment', paymentRoutes);
-
+app.use('/api/dashboard', dashboardRoutes);
 // Connect to MongoDB
 connectDB();
 
