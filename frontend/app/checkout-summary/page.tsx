@@ -250,7 +250,7 @@ function CheckoutSummaryContent() {
                       {userChildren.map((child) => (
                         <Button
                           key={child._id}
-                          variant="outline"
+                          variant={childFirstName === child.firstName && childLastName === child.lastName ? 'default' : 'outline'}
                           className="w-full text-left"
                           onClick={() => {
                             setChildFirstName(child.firstName);
@@ -269,7 +269,12 @@ function CheckoutSummaryContent() {
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => setShowChildForm(true)}
+                  onClick={() => {
+                    setShowChildForm(true);
+                    setChildFirstName('');
+                    setChildLastName('');
+                    setChildAge('');
+                  }}
                 >
                   Add Child Profile
                 </Button>
