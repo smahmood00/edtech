@@ -3,6 +3,9 @@ const router = express.Router();
 const enrollmentController = require('../controllers/enrollmentController');
 const authMiddleware = require('../middleware/authMiddleware');
 
+
+
+//UNUSED ROUTE
 // Save enrollment data after successful payment
 router.post('/save', authMiddleware, enrollmentController.saveEnrollmentData);
 

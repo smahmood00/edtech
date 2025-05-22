@@ -16,7 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 //const API_BASE_URL = 'https://edtech-1-ll96.onrender.com';
 const API_BASE_URL =  process.env.NEXT_PUBLIC_API_BASE_URL; 
-console.log('In chackeout-summary page: API BASE URL IS: ',API_BASE_URL)
+console.log('In checkout-summary page: API BASE URL IS: ',API_BASE_URL)
 
 interface Child {
   _id: string;

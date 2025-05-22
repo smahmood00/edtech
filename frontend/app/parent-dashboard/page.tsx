@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { format } from 'date-fns';
-import { API_BASE_URL } from '@/lib/constants';
 
 interface Course {
   _id: string;
@@ -51,6 +50,8 @@ interface DashboardData {
   userEnrollments: Enrollment[];
   childrenEnrollments: ChildEnrollment[];
 }
+
+const API_BASE_URL =  process.env.NEXT_PUBLIC_API_BASE_URL; 
 
 export default function ParentDashboardPage() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);

@@ -7,11 +7,15 @@ router.post('/initiate', authController.initiateAuth);
 router.post('/verify-otp', authController.verifyOTP);
 router.post('/complete-profile', authController.completeProfile);
 
+
+//UNUSED ROUTE
 // Protected route example
 router.get('/dashboard', auth, (req, res) => {
   res.json({ message: 'Welcome to dashboard' });
 });
 
+
+//UNUSED ROUTE
 // Protected routes
 router.get('/verify-auth', auth, (req, res) => {
   res.status(200).json({ message: 'Token is valid' });
