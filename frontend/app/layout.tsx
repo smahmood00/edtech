@@ -3,8 +3,9 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 
-import { NextAuthProvider } from "@/components/AuthProvider"; // Adjust path if needed
-import { Header } from "@/components/header"; // Assuming your header is here
+import { NextAuthProvider } from "@/components/AuthProvider"
+import { AuthProvider } from "@/contexts/AuthContext"
+import { Header } from "@/components/header"
 
 export default function RootLayout({
   children,
@@ -15,9 +16,10 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <NextAuthProvider>
-          <Header /> {/* Your header component */}
-          <main>{children}</main>
-          {/* Footer or other global components */}
+          <AuthProvider>
+            <Header />
+            <main>{children}</main>
+          </AuthProvider>
         </NextAuthProvider>
       </body>
     </html>

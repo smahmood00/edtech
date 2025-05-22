@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 //const API_BASE_URL = 'https://edtech-1-ll96.onrender.com/api/auth';
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth`; // Add this line to get the API base URL from the environment variabl
@@ -18,18 +19,17 @@ interface LoginFlowProps {
   onLoginSuccess?: () => void;
   redirectPath?: string;
   showBackButton?: boolean;
-  showGoogleSignIn?: boolean;
 }
 
 export function LoginFlow({ 
   onLoginSuccess, 
   redirectPath = '/parent-dashboard',
   showBackButton = true,
-  showGoogleSignIn = true
 }: LoginFlowProps) {
+  const { login } = useAuth();
   const [step, setStep] = useState('initialOptions');
   const [email, setEmail] = useState('');
-  const [otpInputs, setOtpInputs] = useState<string[]>(Array(6).fill(''));
+  const [otpInputs, setOtpInputs] = useState<string[]>(Array(4).fill(''));
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -87,17 +87,15 @@ export function LoginFlow({
 
   const handleVerifyOtp = async () => {
     const currentOtp = otpInputs.join('');
-    if (currentOtp.length !== 6 || !/^\d{6}$/.test(currentOtp)) {
-      setError('Please enter a valid 6-digit OTP.');
+    if (currentOtp.length !== 4 || !/^\d{4}$/.test(currentOtp)) {
+      setError('Please enter a valid 4-digit OTP.');
       return;
     }
     setIsLoading(true);
     setError('');
     try {
       const response = await axios.post(`${API_BASE_URL}/verify-otp`, { email, otp: currentOtp });
-      localStorage.setItem('authToken', response.data.token);
-      localStorage.setItem('userEmail', email); // Add this line
-      setToken(response.data.token);
+      login(email, response.data.token);
       if (response.data.isExistingUser) {
         if (onLoginSuccess) {
           onLoginSuccess();
@@ -122,9 +120,7 @@ export function LoginFlow({
     setError('');
     try {
       const response = await axios.post(`${API_BASE_URL}/complete-profile`, { email, firstName, lastName });
-      localStorage.setItem('authToken', response.data.token);
-      localStorage.setItem('userEmail', email); // Add this line
-      setToken(response.data.token);
+      login(email, response.data.token);
       if (onLoginSuccess) {
         onLoginSuccess();
       } else {
@@ -144,10 +140,10 @@ export function LoginFlow({
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
-    localStorage.removeItem('userEmail'); // Add this line
+    localStorage.removeItem('userEmail');
     setToken(null);
     setEmail('');
-    setOtpInputs(Array(6).fill(''));
+    setOtpInputs(Array(4).fill(''));
     setFirstName('');
     setLastName('');
     setStep('initialOptions');
@@ -160,7 +156,7 @@ export function LoginFlow({
     newOtpInputs[index] = value.replace(/\D/g, '').slice(0, 1);
     setOtpInputs(newOtpInputs);
 
-    if (value && index < 5) {
+    if (value && index < 3) {
       otpInputRefs.current[index + 1]?.focus();
     }
   };
@@ -200,16 +196,6 @@ export function LoginFlow({
           <Button onClick={() => setStep('emailEntry')} className="w-full bg-purple-600 hover:bg-purple-700">
             <Mail className="mr-2 h-4 w-4" /> Email Sign Up / Log In
           </Button>
-          {showGoogleSignIn && (
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              onClick={() => {/* Implement Google Sign In */}}
-            >
-              <span className="mr-2">🇬</span>
-              Sign in with Google
-            </Button>
-          )}
         </div>
       )}
 
@@ -238,7 +224,7 @@ export function LoginFlow({
       {step === 'otpVerification' && (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground text-center">
-            Enter the 6-digit OTP sent to <span className="font-medium text-foreground">{email}</span>
+            Enter the 4-digit OTP sent to <span className="font-medium text-foreground">{email}</span>
           </p>
           <div className="space-y-2">
             <Label htmlFor="otp-input-0">OTP</Label>
@@ -253,17 +239,17 @@ export function LoginFlow({
                   value={digit}
                   onChange={(e) => handleOtpInputChange(index, e.target.value)}
                   onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                  className="w-10 h-10 text-center text-lg border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500 sm:w-12 sm:h-12"
+                  className="w-12 h-12 text-center text-lg border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
                   disabled={isLoading}
                 />
               ))}
             </div>
           </div>
-          <Button onClick={handleVerifyOtp} className="w-full bg-purple-600 hover:bg-purple-700" disabled={isLoading || otpInputs.join('').length !== 6}>
+          <Button onClick={handleVerifyOtp} className="w-full bg-purple-600 hover:bg-purple-700" disabled={isLoading || otpInputs.join('').length !== 4}>
             {isLoading ? 'Verifying...' : 'Next'}
           </Button>
           <div className="flex justify-between items-center text-xs">
-            <Button variant="link" onClick={() => { setError(''); setOtpInputs(Array(6).fill('')); setStep('emailEntry');}} className="p-0 h-auto text-purple-600">
+            <Button variant="link" onClick={() => { setError(''); setOtpInputs(Array(4).fill('')); setStep('emailEntry');}} className="p-0 h-auto text-purple-600">
               Back
             </Button>
             <Button 

@@ -11,11 +11,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loadStripe } from '@stripe/stripe-js';
 import { toast } from "@/components/ui/use-toast";
+import { useAuth } from '@/contexts/AuthContext';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 //const API_BASE_URL = 'https://edtech-1-ll96.onrender.com';
 const API_BASE_URL =  process.env.NEXT_PUBLIC_API_BASE_URL; 
 console.log('In chackeout-summary page: API BASE URL IS: ',API_BASE_URL)
+
+interface Child {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  age: number;
+  parent: string;
+}
 
 interface CheckoutSummaryProps {
   courseName: string;
@@ -25,8 +34,7 @@ interface CheckoutSummaryProps {
 function CheckoutSummaryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
+  const { isAuthenticated, userEmail, isLoading } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [enrollmentType, setEnrollmentType] = useState<'myself' | 'child'>('myself');
@@ -35,23 +43,14 @@ function CheckoutSummaryContent() {
   const [childLastName, setChildLastName] = useState('');
   const [childAge, setChildAge] = useState('');
   const [showChildForm, setShowChildForm] = useState(false);
-  const [userChildren, setUserChildren] = useState([]);
+  const [userChildren, setUserChildren] = useState<Child[]>([]);
+
+  const courseName = searchParams.get('courseName') || 'Course Name';
+  const price = Number(searchParams.get('price')) || 0;
 
   useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem('authToken');
-    const email = localStorage.getItem('userEmail');
-    
-    if (token) {
-      setIsLoggedIn(true);
-      if (email) {
-        setUserEmail(email);
-        console.log('User email loaded from localStorage:', email);
-      } else {
-        console.warn('User is logged in but email is missing from localStorage');
-      }
-
-      // Fetch user's children
+    if (isAuthenticated) {
+      const token = localStorage.getItem('authToken');
       fetch(`${API_BASE_URL}/api/auth/user/children`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -66,14 +65,15 @@ function CheckoutSummaryContent() {
         console.error('Error fetching children:', error);
       });
     }
-  }, []); // Remove userEmail from dependency array to prevent loops
+  }, [isAuthenticated]);
 
-  const courseName = searchParams.get('courseName') || 'Course Name';
-  const price = Number(searchParams.get('price')) || 0;
-
-  // const handlePaymentSelect = (method: 'credit' | 'fps') => {
-  //   setSelectedPayment(method);
-  // };
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
 
   const handlePayment = async (paymentMethod: 'credit' | 'fps') => {
     try {
@@ -178,7 +178,7 @@ function CheckoutSummaryContent() {
       </Card>
 
       {/* Authentication Section */}
-      {!isLoggedIn ? (
+      {!isAuthenticated && (
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Sign In or Sign Up</CardTitle>
@@ -186,169 +186,171 @@ function CheckoutSummaryContent() {
           <CardContent>
             <LoginFlow 
               showBackButton={false}
-              showGoogleSignIn={false}
-              onLoginSuccess={() => setIsLoggedIn(true)}
+              onLoginSuccess={() => {
+                console.log('Login successful');
+              }}
             />
           </CardContent>
         </Card>
-      ) : (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Account</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Signed in as: {userEmail}</p>
-          </CardContent>
-        </Card>
       )}
 
-      {/* Enrollment Type Section */}
-      {isLoggedIn && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Buy this course for</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-4">
-              <Button 
-                variant={enrollmentType === 'myself' ? 'default' : 'outline'}
-                className="w-full"
-                onClick={() => setEnrollmentType('myself')}
-              >
-                Myself
-              </Button>
-              <Button 
-                variant={enrollmentType === 'child' ? 'default' : 'outline'}
-                className="w-full"
-                onClick={() => setEnrollmentType('child')}
-              >
-                My Child
-              </Button>
-            </div>
+      {isAuthenticated && (
+        <>
+          {/* Account Info Card */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Account</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Signed in as: {userEmail}</p>
+            </CardContent>
+          </Card>
 
-            {enrollmentType === 'myself' && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="age">Your Age</Label>
-                  <Input 
-                    id="age" 
-                    type="number" 
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                    placeholder="Enter your age"
-                  />
-                </div>
-              </div>
-            )}
-
-            {enrollmentType === 'child' && (
-              <div className="space-y-4">
-                {userChildren.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Select Child</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {userChildren.map((child) => (
-                        <Button
-                          key={child._id}
-                          variant={childFirstName === child.firstName && childLastName === child.lastName ? 'default' : 'outline'}
-                          className="w-full text-left"
-                          onClick={() => {
-                            setChildFirstName(child.firstName);
-                            setChildLastName(child.lastName);
-                            setChildAge(child.age.toString());
-                            setShowChildForm(false);
-                          }}
-                        >
-                          {child.firstName} {child.lastName}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                <Button
-                  variant="outline"
+          {/* Enrollment Type Section */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Buy this course for</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-4">
+                <Button 
+                  variant={enrollmentType === 'myself' ? 'default' : 'outline'}
                   className="w-full"
-                  onClick={() => {
-                    setShowChildForm(true);
-                    setChildFirstName('');
-                    setChildLastName('');
-                    setChildAge('');
-                  }}
+                  onClick={() => setEnrollmentType('myself')}
                 >
-                  Add Child Profile
+                  Myself
                 </Button>
-
-                {showChildForm && (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="childFirstName">Child's First Name</Label>
-                      <Input 
-                        id="childFirstName" 
-                        type="text" 
-                        value={childFirstName}
-                        onChange={(e) => setChildFirstName(e.target.value)}
-                        placeholder="First name"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="childLastName">Child's Last Name</Label>
-                      <Input 
-                        id="childLastName" 
-                        type="text" 
-                        value={childLastName}
-                        onChange={(e) => setChildLastName(e.target.value)}
-                        placeholder="Last name"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="childAge">Child's Age</Label>
-                      <Input 
-                        id="childAge" 
-                        type="number" 
-                        value={childAge}
-                        onChange={(e) => setChildAge(e.target.value)}
-                        placeholder="Age"
-                      />
-                    </div>
-                  </div>
-                )}
+                <Button 
+                  variant={enrollmentType === 'child' ? 'default' : 'outline'}
+                  className="w-full"
+                  onClick={() => setEnrollmentType('child')}
+                >
+                  My Child
+                </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Payment Section */}
-      {isLoggedIn && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Last Step...</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              variant="default"
-              className="w-full flex items-center justify-center"
-              onClick={() => handlePayment('credit')}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Pay with Credit Card
-                </>
+              {enrollmentType === 'myself' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="age">Your Age</Label>
+                    <Input 
+                      id="age" 
+                      type="number" 
+                      value={age}
+                      onChange={(e) => setAge(e.target.value)}
+                      placeholder="Enter your age"
+                    />
+                  </div>
+                </div>
               )}
-            </Button>
-            {error && (
-              <p className="text-sm text-red-600 mt-2">{error}</p>
-            )}
-          </CardContent>
-        </Card>
+
+              {enrollmentType === 'child' && (
+                <div className="space-y-4">
+                  {userChildren.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Select Child</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {userChildren.map((child) => (
+                          <Button
+                            key={child._id}
+                            variant={childFirstName === child.firstName && childLastName === child.lastName ? 'default' : 'outline'}
+                            className="w-full text-left"
+                            onClick={() => {
+                              setChildFirstName(child.firstName);
+                              setChildLastName(child.lastName);
+                              setChildAge(child.age.toString());
+                              setShowChildForm(false);
+                            }}
+                          >
+                            {child.firstName} {child.lastName}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      setShowChildForm(true);
+                      setChildFirstName('');
+                      setChildLastName('');
+                      setChildAge('');
+                    }}
+                  >
+                    Add Child Profile
+                  </Button>
+
+                  {showChildForm && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="childFirstName">Child's First Name</Label>
+                        <Input 
+                          id="childFirstName" 
+                          type="text" 
+                          value={childFirstName}
+                          onChange={(e) => setChildFirstName(e.target.value)}
+                          placeholder="First name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="childLastName">Child's Last Name</Label>
+                        <Input 
+                          id="childLastName" 
+                          type="text" 
+                          value={childLastName}
+                          onChange={(e) => setChildLastName(e.target.value)}
+                          placeholder="Last name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="childAge">Child's Age</Label>
+                        <Input 
+                          id="childAge" 
+                          type="number" 
+                          value={childAge}
+                          onChange={(e) => setChildAge(e.target.value)}
+                          placeholder="Age"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Payment Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Last Step...</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                variant="default"
+                className="w-full flex items-center justify-center"
+                onClick={() => handlePayment('credit')}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Pay with Credit Card
+                  </>
+                )}
+              </Button>
+              {error && (
+                <p className="text-sm text-red-600 mt-2">{error}</p>
+              )}
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );

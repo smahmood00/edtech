@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
 exports.initiateAuth = async (req, res) => {
@@ -31,6 +31,11 @@ exports.initiateAuth = async (req, res) => {
     const otp = generateOTP();
     console.log("Email is : ", email);
     console.log("OTP is : ", otp);
+
+    // Validate OTP format before hashing
+    if (!/^\d{4}$/.test(otp)) {
+      throw new Error('Invalid OTP format');
+    }
 
     // Save OTP
     await OTP.create({
