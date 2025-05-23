@@ -70,9 +70,9 @@ export default function ParentDashboardPage() {
           throw new Error('No authentication token found');
         }
         console.log('Auth token found, making API request');
-        console.log('API URL:', `${API_BASE_URL}/dashboard/parent`);
+        console.log('API URL:', `${API_BASE_URL}/api/dashboard/parent`);
         
-        const response = await fetch(`${API_BASE_URL}/dashboard/parent`, {
+        const response = await fetch(`${API_BASE_URL}/api/dashboard/parent`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
