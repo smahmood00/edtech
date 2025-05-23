@@ -15,8 +15,23 @@ app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
 
 // Regular middleware for other routes
 app.use(express.json());
+
+// CORS configuration
+const allowedOrigins = [
+  'https://eveagleacademy.vercel.app',
+  'http://localhost:3000'  // For local development
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
+    }
+    return callback(null, true);
+  },
   credentials: true
 }));
 
@@ -25,6 +40,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+
 // Connect to MongoDB
 connectDB();
 
