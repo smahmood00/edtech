@@ -80,14 +80,22 @@ export default function Home() {
         {/* Background Image */}
         <div className="absolute inset-0 w-full h-full">
           <Image
-            src="/hero-section-kid.jpg"
-            alt="Kids learning technology"
+            src="/cyberpunk-hero.jpg"
+            alt="Dystopian cyberpunk scene"
             fill
-            className="object-cover brightness-[0.85]"
+            className="object-cover"
             priority
           />
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#172A3A]/90 to-transparent"></div>
+          {/* Cyberpunk Grid Overlay */}
+          <div className="absolute inset-0 bg-[url('/cyberpunk-grid.svg')] " />
+          
+          {/* Gradient Overlays */}
+          {/* <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a]/70 via-[#0a0a0a]/40 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-[#0a0a0a]/60"></div>
+           */}
+          {/* Neon Accents */}
+          <div className="absolute -left-20 top-1/4 h-96 w-96 rounded-full bg-[#00ffff] opacity-20 blur-[100px]" />
+          <div className="absolute -right-20 bottom-1/4 h-96 w-96 rounded-full bg-[#ff00ff] opacity-20 blur-[100px]" />
         </div>
 
         {/* Content */}
@@ -95,27 +103,26 @@ export default function Home() {
           <div className="max-w-3xl">
             <div className="animate-fadeIn space-y-6 md:space-y-8">
               <Badge 
-                className="w-fit bg-white/10 backdrop-blur-sm text-white border-none hover:bg-white/20 px-4 py-1 text-sm
+                className="w-fit bg-[#00ffff]/10 text-[#00ffff] border-[#00ffff]/20 backdrop-blur-sm hover:bg-[#00ffff]/20 px-4 py-1 text-sm
                 animate-slideInFromLeft"
                 style={{ animationDelay: "0.2s" }}
               >
-                Learning for the future
+                Welcome to the future of learning
               </Badge>
               
               <div className="space-y-4">
                 <h1 className="animate-slideInFromBottom" style={{ animationDelay: "0.4s" }}>
                   <span className="block text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight">
-                    Where Young Minds
+                    Next Generation
                   </span>
-                  <span className="block text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-[#4A6FA5] to-[#FF8A5B] bg-clip-text text-transparent mt-2">
-                    Meet Technology
+                  <span className="block text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-[#00ffff] to-[#ff00ff] bg-clip-text text-transparent mt-2">
+                    Tech Education
                   </span>
                 </h1>
                 
-                <p className="max-w-[600px] text-white/80 text-lg md:text-xl animate-slideInFromBottom" 
+                <p className="max-w-[600px] text-[#8a8a8a] text-lg md:text-xl animate-slideInFromBottom" 
                   style={{ animationDelay: "0.6s" }}>
-                  Empower your child with the skills of tomorrow. Interactive AI and coding courses designed
-                  specifically for kids and teens.
+                  Unlock the digital frontier. Empower your child with cutting-edge AI and coding skills in an immersive learning environment.
                 </p>
               </div>
 
@@ -124,29 +131,31 @@ export default function Home() {
                   style={{ animationDelay: "0.8s" }}>
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto bg-[#FF8A5B] hover:bg-[#4A6FA5] text-white border-0 
-                      transition-all duration-300 hover:scale-105 hover:shadow-lg shadow-md backdrop-blur-sm"
+                    className="w-full sm:w-auto bg-[#00ffff] hover:bg-[#00ffff]/80 text-black border-0 
+                      transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(0,255,255,0.4)] shadow-[0_0_15px_rgba(0,255,255,0.2)]"
                   >
-                    Explore Courses
+                    <span className="flex items-center">
+                      Initialize Training <ArrowRight className="ml-2 h-4 w-4" />
+                    </span>
                   </Button>
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full sm:w-auto border-white  hover:bg-white hover:text-[#172A3A] 
+                    className="w-full sm:w-auto border-[#00ffff] text-[#00ffff] hover:bg-[#00ffff]/10
                       transition-all duration-300 hover:scale-105 backdrop-blur-sm"
                   >
-                    Chat with us
+                    <span className="flex items-center">
+                      Neural Link <Zap className="ml-2 h-4 w-4" />
+                    </span>
                   </Button>
                 </div>
-
-            
               </div>
             </div>
           </div>
         </div>
 
         {/* Animated Decorative Elements */}
-        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-[#172A3A]/50 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-[#0a0a0a] to-transparent"></div>
       </section>
 
       <style jsx global>{`

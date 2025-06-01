@@ -13,27 +13,21 @@ const app = express();
 // Handle raw body for Stripe webhooks
 app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
 
-// Regular middleware for other routes
-app.use(express.json());
-
-// CORS configuration
-const allowedOrigins = [
-  'https://eveagleacademy.vercel.app',
-  'http://localhost:3000'  // For local development
-];
-
+// CORS configuration - must be before any routes
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
-    }
-    return callback(null, true);
-  },
+  origin: ['https://eveagleacademy.vercel.app', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
+
+// Regular middleware
+app.use(express.json());
+
+// Test route to verify API is working
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API is working' });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -49,7 +43,7 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-// Add this route before your other routes
+// Root route
 app.get('/', (req, res) => {
   res.json({ message: 'EdTech API is running' });
 });

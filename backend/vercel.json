@@ -11,5 +11,7 @@
             "src": "/(.*)",
             "dest": "src/server.js"
         }
-    ]
+    ],
+    "outputDirectory": ".",
+    "buildCommand": "cd edtech/backend && npm install"
 } 

@@ -168,33 +168,36 @@ export function LoginFlow({
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col justify-center space-y-6 rounded-lg bg-white p-6 shadow-lg sm:p-8">
+    <div className="w-full max-w-sm mx-auto flex flex-col justify-center space-y-6 rounded-lg bg-[#1a1a1a] bg-opacity-80 p-6 shadow-[0_0_15px_rgba(0,255,255,0.1)] backdrop-blur-lg border border-[#333333] sm:p-8">
       {showBackButton && (
-        <Link href="/" className="flex items-center text-sm font-medium text-purple-600 hover:text-purple-800">
+        <Link href="/" className="flex items-center text-sm font-medium text-[#00ffff] hover:text-[#00cccc] transition-colors">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
+          Return to Base
         </Link>
       )}
 
       <div className="flex flex-col space-y-2 text-center">
-        <User className="mx-auto h-10 w-10 text-purple-600" />
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {step === 'profileCompletion' ? 'Complete Your Profile' : 
-           step === 'otpVerification' ? 'Verify Your Email' :
-           step === 'emailEntry' ? 'Enter Your Email' :
-           'Parent Access'}
+        <User className="mx-auto h-10 w-10 text-[#00ffff]" />
+        <h1 className="text-2xl font-semibold tracking-wider text-white">
+          {step === 'profileCompletion' ? 'Identity Verification' : 
+           step === 'otpVerification' ? 'Neural Link Verification' :
+           step === 'emailEntry' ? 'Access Protocol' :
+           'Secure Gateway'}
         </h1>
         {step === 'initialOptions' && (
-          <p className="text-sm text-muted-foreground">Monitor your child's progress and manage their account</p>
+          <p className="text-sm text-[#8a8a8a]">Initialize neural link to monitor subject progress</p>
         )}
       </div>
 
-      {error && <p className="text-sm text-red-600 mb-4 text-center">{error}</p>}
+      {error && <p className="text-sm text-[#ff0066] mb-4 text-center">{error}</p>}
 
       {step === 'initialOptions' && (
         <div className="space-y-4">
-          <Button onClick={() => setStep('emailEntry')} className="w-full bg-purple-600 hover:bg-purple-700">
-            <Mail className="mr-2 h-4 w-4" /> Email Sign Up / Log In
+          <Button 
+            onClick={() => setStep('emailEntry')} 
+            className="w-full bg-[#1a1a1a] border border-[#00ffff] text-[#00ffff] hover:bg-[#00ffff] hover:text-black transition-all duration-300 shadow-[0_0_10px_rgba(0,255,255,0.3)] hover:shadow-[0_0_20px_rgba(0,255,255,0.5)]"
+          >
+            <Mail className="mr-2 h-4 w-4" /> Initialize Connection
           </Button>
         </div>
       )}
@@ -202,64 +205,83 @@ export function LoginFlow({
       {step === 'emailEntry' && (
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email-input">Email Address</Label>
+            <Label htmlFor="email-input" className="text-[#8a8a8a]">Neural Link ID</Label>
             <Input 
               id="email-input" 
               type="email" 
-              placeholder="parent@example.com" 
+              placeholder="operator@network.com" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
+              className="bg-[#2a2a2a] border-[#333333] text-white placeholder-[#4a4a4a] focus:border-[#00ffff] focus:ring-[#00ffff] focus:ring-opacity-50"
             />
           </div>
-          <Button onClick={() => handleInitiateOtp(email)} className="w-full bg-purple-600 hover:bg-purple-700" disabled={isLoading}>
-            {isLoading ? 'Sending OTP...' : 'Send OTP'}
+          <Button 
+            onClick={() => handleInitiateOtp(email)} 
+            className="w-full bg-[#1a1a1a] border border-[#00ffff] text-[#00ffff] hover:bg-[#00ffff] hover:text-black transition-all duration-300 shadow-[0_0_10px_rgba(0,255,255,0.3)] hover:shadow-[0_0_20px_rgba(0,255,255,0.5)]" 
+            disabled={isLoading}
+          >
+            {isLoading ? 'Establishing Link...' : 'Establish Neural Link'}
           </Button>
-          <Button variant="ghost" onClick={() => { setError(''); setStep('initialOptions');}} className="w-full text-purple-600">
-            Back
+          <Button 
+            variant="ghost" 
+            onClick={() => { setError(''); setStep('initialOptions');}} 
+            className="w-full text-[#00ffff] hover:text-[#00cccc] hover:bg-transparent"
+          >
+            Abort
           </Button>
         </div>
       )}
 
       {step === 'otpVerification' && (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground text-center">
-            Enter the 4-digit OTP sent to <span className="font-medium text-foreground">{email}</span>
+          <p className="text-sm text-[#8a8a8a] text-center">
+            Enter the neural key sent to <span className="font-medium text-[#00ffff]">{email}</span>
           </p>
           <div className="space-y-2">
-            <Label htmlFor="otp-input-0">OTP</Label>
+            <Label htmlFor="otp-input-0" className="text-[#8a8a8a]">Neural Key</Label>
             <div className="flex justify-between space-x-2">
               {otpInputs.map((digit, index) => (
                 <Input
                   key={index}
                   id={`otp-input-${index}`}
-                  ref={(el) => (otpInputRefs.current[index] = el)}
+                  ref={(el) => {
+                    otpInputRefs.current[index] = el;
+                  }}
                   type="text"
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleOtpInputChange(index, e.target.value)}
                   onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                  className="w-12 h-12 text-center text-lg border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+                  className="w-12 h-12 text-center text-lg bg-[#2a2a2a] border-[#333333] text-[#00ffff] focus:border-[#00ffff] focus:ring-[#00ffff] focus:ring-opacity-50"
                   disabled={isLoading}
                 />
               ))}
             </div>
           </div>
-          <Button onClick={handleVerifyOtp} className="w-full bg-purple-600 hover:bg-purple-700" disabled={isLoading || otpInputs.join('').length !== 4}>
-            {isLoading ? 'Verifying...' : 'Next'}
+          <Button 
+            onClick={handleVerifyOtp} 
+            className="w-full bg-[#1a1a1a] border border-[#00ffff] text-[#00ffff] hover:bg-[#00ffff] hover:text-black transition-all duration-300 shadow-[0_0_10px_rgba(0,255,255,0.3)] hover:shadow-[0_0_20px_rgba(0,255,255,0.5)]" 
+            disabled={isLoading || otpInputs.join('').length !== 4}
+          >
+            {isLoading ? 'Verifying...' : 'Authenticate'}
           </Button>
           <div className="flex justify-between items-center text-xs">
-            <Button variant="link" onClick={() => { setError(''); setOtpInputs(Array(4).fill('')); setStep('emailEntry');}} className="p-0 h-auto text-purple-600">
-              Back
+            <Button 
+              variant="link" 
+              onClick={() => { setError(''); setOtpInputs(Array(4).fill('')); setStep('emailEntry');}} 
+              className="p-0 h-auto text-[#00ffff] hover:text-[#00cccc]"
+            >
+              Abort
             </Button>
             <Button 
               variant="link" 
               onClick={handleResendOtp} 
               disabled={isResendActive || isLoading}
-              className="p-0 h-auto text-purple-600 disabled:opacity-50"
+              className="p-0 h-auto text-[#00ffff] hover:text-[#00cccc] disabled:opacity-50 flex items-center"
             >
               <RotateCcw className={`mr-1 h-3 w-3 ${isResendActive ? 'animate-spin' : ''}`} />
-              Resend OTP {isResendActive ? `(${countdown}s)` : ''}
+              Resync {isResendActive ? `(${countdown}s)` : ''}
             </Button>
           </div>
         </div>
@@ -267,33 +289,39 @@ export function LoginFlow({
 
       {step === 'profileCompletion' && (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground text-center">
-            Nice to meet you! Please complete your profile.
+          <p className="text-sm text-[#8a8a8a] text-center">
+            Initialize operator profile configuration
           </p>
           <div className="space-y-2">
-            <Label htmlFor="firstName">Parent First Name *</Label>
+            <Label htmlFor="firstName" className="text-[#8a8a8a]">Operator First Designation *</Label>
             <Input 
               id="firstName" 
               type="text" 
-              placeholder="Tai Man" 
+              placeholder="Neo" 
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               disabled={isLoading}
+              className="bg-[#2a2a2a] border-[#333333] text-white placeholder-[#4a4a4a] focus:border-[#00ffff] focus:ring-[#00ffff] focus:ring-opacity-50"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="lastName">Parent Last Name *</Label>
+            <Label htmlFor="lastName" className="text-[#8a8a8a]">Operator Last Designation *</Label>
             <Input 
               id="lastName" 
               type="text" 
-              placeholder="Chan" 
+              placeholder="Anderson" 
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               disabled={isLoading}
+              className="bg-[#2a2a2a] border-[#333333] text-white placeholder-[#4a4a4a] focus:border-[#00ffff] focus:ring-[#00ffff] focus:ring-opacity-50"
             />
           </div>
-          <Button onClick={handleCompleteProfile} className="w-full bg-purple-600 hover:bg-purple-700" disabled={isLoading}>
-            {isLoading ? 'Saving...' : 'Continue'}
+          <Button 
+            onClick={handleCompleteProfile} 
+            className="w-full bg-[#1a1a1a] border border-[#00ffff] text-[#00ffff] hover:bg-[#00ffff] hover:text-black transition-all duration-300 shadow-[0_0_10px_rgba(0,255,255,0.3)] hover:shadow-[0_0_20px_rgba(0,255,255,0.5)]" 
+            disabled={isLoading}
+          >
+            {isLoading ? 'Initializing...' : 'Initialize Profile'}
           </Button>
         </div>
       )}
